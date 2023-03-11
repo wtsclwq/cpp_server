@@ -2,7 +2,7 @@
  * @Description:
  * @Author: wtsclwq
  * @Date: 2023-03-10 18:29:16
- * @LastEditTime: 2023-03-11 16:33:54
+ * @LastEditTime: 2023-03-11 19:02:21
  * @LastEditors: Please set LastEditors
  */
 
@@ -354,6 +354,9 @@ class Person {
     std::string m_name{"lwq"};
     int m_age{18};
     bool m_sex{true};
+    auto operator==(const Person& other) const -> bool {
+        return m_name == other.m_name && m_age == other.m_age && m_sex == other.m_sex;
+    }
 
     auto ToString() const -> std::string {
         std::stringstream sstream;

@@ -2,7 +2,7 @@
  * @Description:
  * @author: wtsclwq
  * @Date: 2023-03-08 11:58:32
- * @LastEditTime: 2023-03-11 16:35:04
+ * @LastEditTime: 2023-03-11 19:17:16
  */
 
 #include "../src/include/config/config.h"
@@ -183,7 +183,11 @@ void test_std_type() {
 void test_class() {
     auto g_person =
         wtsclwq::Config::Lookup("class.person", wtsclwq::Person(), "costum person class");
-
+    g_person->AddListener(
+        1, [](const wtsclwq::Person &old_val, const wtsclwq::Person &new_val) {
+            LOG_INFO(ROOT_LOGGER, "Callback test : old value = " + old_val.ToString() +
+                                      "new value = " + new_val.ToString());
+        });
     LOG_INFO(ROOT_LOGGER, "before");
     LOG_INFO(ROOT_LOGGER, g_person->GetValue().ToString() + " - " + g_person->ToString());
     YAML::Node root = YAML::LoadFile("/home/wtsclwq/desktop/config.yml");
