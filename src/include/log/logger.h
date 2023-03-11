@@ -17,16 +17,21 @@
 
 #define LOG_BY_LEVEL(logger, level, message) logger->Log(MAKE_LOG_EVENT(level, message))
 
-#define LOG_DEBUG(logger, message) LOG_BY_LEVEL(logger, LogLevel::Level::DEBUG, message)
-#define LOG_INFO(logger, message) LOG_BY_LEVEL(logger, LogLevel::Level::INFO, message)
-#define LOG_WARN(logger, message) LOG_BY_LEVEL(logger, LogLevel::Level::WARN, message)
-#define LOG_ERROR(logger, message) LOG_BY_LEVEL(logger, LogLevel::Level::ERROR, message)
-#define LOG_FATAL(logger, message) LOG_BY_LEVEL(logger, LogLevel::Level::FATAL, message)
+#define LOG_DEBUG(logger, message) \
+    LOG_BY_LEVEL(logger, wtsclwq::LogLevel::Level::DEBUG, message)
+#define LOG_INFO(logger, message) \
+    LOG_BY_LEVEL(logger, wtsclwq::LogLevel::Level::INFO, message)
+#define LOG_WARN(logger, message) \
+    LOG_BY_LEVEL(logger, wtsclwq::LogLevel::Level::WARN, message)
+#define LOG_ERROR(logger, message) \
+    LOG_BY_LEVEL(logger, wtsclwq::LogLevel::Level::ERROR, message)
+#define LOG_FATAL(logger, message) \
+    LOG_BY_LEVEL(logger, wtsclwq::LogLevel::Level::FATAL, message)
 
-#define LOG_CUSTOM_LEVEL(logger, level, pattern, ...)             \
+#define LOG_CUSTOM_LEVEL(logger, level, pattern, ...)                 \
     {                                                                 \
-        char* buffer = new char;                                    \
-        int length = asprintf(&buffer, pattern, ##__VA_ARGS__);                \
+        char* buffer = new char;                                      \
+        int length = asprintf(&buffer, pattern, ##__VA_ARGS__);       \
         if (length != -1) {                                           \
             LOG_BY_LEVEL(logger, level, std::string(buffer, length)); \
             delete buffer;                                            \

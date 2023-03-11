@@ -1,11 +1,11 @@
 #include <memory>
 
-#include "include/log/log_appender.h"
-#include "include/log/log_event.h"
-#include "include/log/log_formatter.h"
-#include "include/log/log_level.h"
-#include "include/log/log_manager.h"
-#include "include/log/logger.h"
+#include "../src/include/log/log_appender.h"
+#include "../src/include/log/log_event.h"
+#include "../src/include/log/log_formatter.h"
+#include "../src/include/log/log_level.h"
+#include "../src/include/log/log_manager.h"
+#include "../src/include/log/logger.h"
 
 auto main() -> int {
     auto logger = wtsclwq::SingltonLogManager::GetInstancePtr()->GetGlobalLogger();

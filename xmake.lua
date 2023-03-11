@@ -1,16 +1,31 @@
 add_rules("mode.debug", "mode.release")
-
+add_requires("boost","yaml-cpp")
 set_languages("C++17")
-target("logger")
+
+target("log")
     set_kind("shared")
     set_languages("C++17")
     add_files("src/log/*.cpp")
+    
+target("config")
+    set_kind("shared")
+    set_languages("C++17")
+    add_files("src/config/*.cpp")
+    add_packages("boost","yaml-cpp")
 
-target("server_test")
+target("log_test")
     set_kind("binary")
     set_languages("C++17") 
-    add_files("src/main.cpp")
-    add_deps("logger")
+    add_files("test/log_test.cpp")
+    add_deps("log")
+
+target("config_test")
+    set_kind("binary")
+    set_languages("C++17") 
+    add_files("test/config_test.cpp")
+    add_deps("log")
+    add_deps("config")
+    add_packages("boost","yaml-cpp")
 
 --
 -- If you want to known more usage about xmake, please see https://xmake.io

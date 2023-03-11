@@ -6,6 +6,8 @@
 #include "../util/singleton.h"
 #include "logger.h"
 
+#define ROOT_LOGGER wtsclwq::SingltonLogManager::GetInstancePtr()->GetGlobalLogger()
+
 namespace wtsclwq {
 
 class LogManager {
