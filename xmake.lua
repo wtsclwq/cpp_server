@@ -6,6 +6,7 @@ target("log")
     set_kind("shared")
     set_languages("C++17")
     add_files("src/log/*.cpp")
+    add_packages("boost","yaml-cpp")
     
 target("config")
     set_kind("shared")
@@ -18,6 +19,9 @@ target("log_test")
     set_languages("C++17") 
     add_files("test/log_test.cpp")
     add_deps("log")
+    add_deps("config")
+
+    add_packages("boost","yaml-cpp")
 
 target("config_test")
     set_kind("binary")

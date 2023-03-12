@@ -1,14 +1,22 @@
+/*
+ * @Description:
+ * @author: wtsclwq
+ * @Date: 2023-03-05 22:27:34
+ * @LastEditTime: 2023-03-12 15:12:43
+ */
 #pragma once
 
 #include <cstdio>
 #include <cstdlib>
 #include <list>
 #include <memory>
+#include <vector>
 
 #include "../util/thread_util.h"
 #include "log_appender.h"
 #include "log_event.h"
 #include "log_formatter.h"
+#include "log_level.h"
 
 #define MAKE_LOG_EVENT(level, content)                                                 \
     std::make_shared<wtsclwq::LogEvent>(__FILE__, __LINE__, content,                   \
@@ -19,12 +27,16 @@
 
 #define LOG_DEBUG(logger, message) \
     LOG_BY_LEVEL(logger, wtsclwq::LogLevel::Level::DEBUG, message)
+
 #define LOG_INFO(logger, message) \
     LOG_BY_LEVEL(logger, wtsclwq::LogLevel::Level::INFO, message)
+
 #define LOG_WARN(logger, message) \
     LOG_BY_LEVEL(logger, wtsclwq::LogLevel::Level::WARN, message)
+
 #define LOG_ERROR(logger, message) \
     LOG_BY_LEVEL(logger, wtsclwq::LogLevel::Level::ERROR, message)
+
 #define LOG_FATAL(logger, message) \
     LOG_BY_LEVEL(logger, wtsclwq::LogLevel::Level::FATAL, message)
 
@@ -55,6 +67,17 @@
 
 namespace wtsclwq {
 
+struct LoggerConfig {
+    std::string name;                                 // 日志器名称
+    LogLevel::Level level{LogLevel::Level::UNKNOWN};  // 日志有效等级
+    std::string pattern;                              // 日志格式
+    std::vector<LogAppenderConfig> appenders;         // 目的地集合
+
+    auto operator==(const LoggerConfig& other) const -> bool {
+        return name == other.name;
+    }
+};
+
 /**
  * 日志器
  */
@@ -69,10 +92,11 @@ class Logger {
     void Log(const LogEvent::ptr& log_event);
 
     /* 为日志对象添加一个日志输出目的地 */
-    void AddAppender(const LogAppender::ptr& log_appender);
+    void AddAppender(LogAppender::ptr&& log_appender);
     /* 为日志对象删除某个日志输出目的地 */
     void DelAppender(const LogAppender::ptr& log_appender);
 
+    auto GetName() const -> std::string { return m_name; }
     auto GetLevel() const -> LogLevel::Level { return m_level; }
     void SetLevel(LogLevel::Level level) { m_level = level; }
 

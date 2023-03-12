@@ -2,7 +2,7 @@
  * @Description:
  * @author: wtsclwq
  * @Date: 2023-03-08 11:58:32
- * @LastEditTime: 2023-03-11 19:17:16
+ * @LastEditTime: 2023-03-12 15:22:16
  */
 
 #include "../src/include/config/config.h"
@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <iostream>
 #include <list>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -18,7 +19,6 @@
 #include "../src/include/util/cast_util.h"
 #include "yaml-cpp/node/node.h"
 #include "yaml-cpp/node/parse.h"
-#include "yaml-cpp/yaml.h"
 
 const int port = 8080;
 
@@ -184,18 +184,48 @@ void test_class() {
     auto g_person =
         wtsclwq::Config::Lookup("class.person", wtsclwq::Person(), "costum person class");
     g_person->AddListener(
-        1, [](const wtsclwq::Person &old_val, const wtsclwq::Person &new_val) {
+        [](const wtsclwq::Person &old_val, const wtsclwq::Person &new_val) {
             LOG_INFO(ROOT_LOGGER, "Callback test : old value = " + old_val.ToString() +
                                       "new value = " + new_val.ToString());
         });
     LOG_INFO(ROOT_LOGGER, "before");
     LOG_INFO(ROOT_LOGGER, g_person->GetValue().ToString() + " - " + g_person->ToString());
-    YAML::Node root = YAML::LoadFile("/home/wtsclwq/desktop/config.yml");
+    YAML::Node root = YAML::LoadFile("/home/wtsclwq/desktop/test.yml");
     wtsclwq::Config::LoadFromYaml(root);
     LOG_INFO(ROOT_LOGGER, "after");
     LOG_INFO(ROOT_LOGGER, g_person->GetValue().ToString() + " - " + g_person->ToString());
 }
+
+void test_yaml() {
+    YAML::Node node;
+    node["name"] = "lwq";
+    node["age"] = 18;
+    node["name"] = "sxh";
+    std::cout << node << std::endl;
+    // if (node.IsSequence()) {
+    //     for (auto i : node) {
+    //         std::cout << i.first << "  " << i.second << std::endl;
+    //     }
+    // }
+    std::cout << node["name"] << std::endl;
+}
+
+void test_log_config() {
+    auto g_logs_set =
+        wtsclwq::Config::LookupByName<std::vector<wtsclwq::LoggerConfig>>("logs");
+    LOG_INFO(ROOT_LOGGER, "before");
+    LOG_INFO(ROOT_LOGGER, std::to_string(g_logs_set->GetValue().size()));
+    for (const auto &item : g_logs_set->GetValue()) {
+        LOG_INFO(ROOT_LOGGER, item.name);
+    }
+    YAML::Node node = YAML::LoadFile("/home/wtsclwq/desktop/log_config.yml");
+    wtsclwq::Config::LoadFromYaml(node);
+
+    LOG_INFO(ROOT_LOGGER, "全局logger输出");
+    LOG_INFO(GET_LOGGER_BY_NAME("system"), "system logger 输出");
+}
+
 auto main() -> int {
-    test_class();
+    test_log_config();
     return 0;
 }

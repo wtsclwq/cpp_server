@@ -17,7 +17,9 @@ namespace wtsclwq {
  * %% 输出百分号
  * %T 输出制表符
  * */
-static thread_local std::map<char, LogFormatter::FormatItem::ptr> format_item_map{//NOLINT
+
+static thread_local 
+std::map<char, LogFormatter::FormatItem::ptr> format_item_map{ // NOLINT
     {'p', std::make_shared<LevelFormatItem>()},
     {'f', std::make_shared<FilenameFormatItem>()},
     {'l', std::make_shared<LineFormatItem>()},
@@ -69,7 +71,7 @@ void LogFormatter::Init() {
                 break;
             // 处理占位符
             case CREATE_STATUS:
-                assert(("format_item_map没有被正确的初始化", !format_item_map.empty()));
+                assert(("format_item_map没有被正确的初始化", !format_item_map.empty())); // NOLINT
                 auto iter = format_item_map.find(m_pattern[i]);
                 if (iter == format_item_map.end()) {
                     m_items.push_back(

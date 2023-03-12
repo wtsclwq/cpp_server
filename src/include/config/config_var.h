@@ -1,13 +1,18 @@
+/*
+ * @Description:
+ * @author: wtsclwq
+ * @Date: 2023-03-07 22:38:56
+ * @LastEditTime: 2023-03-12 20:28:18
+ */
 
 #pragma once
-#include <boost/lexical_cast.hpp>
 #include <cstdint>
+#include <cstdio>
 #include <functional>
 #include <memory>
 #include <string>
 #include <utility>
 
-#include "../log/log_manager.h"
 #include "../util/cast_util.h"
 #include "config_var_base.h"
 /**
@@ -37,11 +42,12 @@ class ConfigVar : public ConfigVarBase {
         if (val == m_val) {
             return;
         }
+        T old_val = m_val; 
+        m_val = val;
         // 如果有变化，调用所有回调函数
         for (auto& item : m_call_backs) {
-            item.second(m_val, val);
+            item.second(old_val, m_val);
         }
-        m_val = val;
     }
 
     auto ToString() -> std::string override;
@@ -50,8 +56,10 @@ class ConfigVar : public ConfigVarBase {
 
     auto GetTypeName() const -> std::string override { return typeid(T).name(); }
 
-    void AddListener(uint64_t key, on_change_callback call_back) {
-        m_call_backs.insert(std::make_pair(key, call_back));
+    auto AddListener(on_change_callback call_back) -> uint64_t {
+        static uint64_t call_back_id = 0;
+        m_call_backs.insert(std::make_pair(++call_back_id, call_back));
+        return call_back_id;
     }
 
     void DelListener(uint64_t key) { m_call_backs.erase(key); }
@@ -73,10 +81,8 @@ auto ConfigVar<T, FromStr, ToStr>::ToString() -> std::string {
         // 尝试将value转换
         return ToStr()(m_val);
     } catch (std::exception& e) {
-        std::stringstream message;
-        message << e.what() << "ConfigVar<T>::ToString()，类型转换错误"
-                << "convert: " << typeid(m_val).name() << "to string";
-        LOG_ERROR(ROOT_LOGGER, message.str());
+        std::cerr << e.what() << "ConfigVar<T>::ToString()，类型转换错误"
+                  << "convert: " << typeid(m_val).name() << "to string";
     }
     return "";
 }
@@ -86,10 +92,8 @@ auto ConfigVar<T, FromStr, ToStr>::FromString(std::string val) -> bool {
     try {
         SetValue(FromStr()(val));
     } catch (std::exception& e) {
-        std::stringstream message;
-        message << e.what() << "ConfigVar<T>::FromString()，类型转换错误"
-                << "convert: string to " << typeid(m_val).name();
-        LOG_ERROR(ROOT_LOGGER, message.str());
+        std::cerr << e.what() << "ConfigVar<T>::FromString()，类型转换错误"
+                  << "convert: string to " << typeid(m_val).name();
     }
     return false;  // ?为什么是false?
 }

@@ -1,14 +1,36 @@
+/*
+ * @Description:
+ * @author: wtsclwq
+ * @Date: 2023-03-05 22:27:34
+ * @LastEditTime: 2023-03-11 23:59:34
+ */
 #pragma once
+
+#include <bits/types/FILE.h>
 
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <string>
 
 #include "log_event.h"
 #include "log_formatter.h"
 #include "log_level.h"
 
 namespace wtsclwq {
+
+struct LogAppenderConfig {
+    enum Type { STDOUT = 0, FILE = 1 };
+    LogAppenderConfig::Type type{Type::STDOUT};       // 目的地的类型
+    LogLevel::Level level{LogLevel::Level::UNKNOWN};  // 日志等级
+    std::string pattern;                              // 目的地的日志格式
+    std::string file;  // 目的地的目标文件path,仅在FILE时有效
+
+    auto operator==(const LogAppenderConfig& other) const -> bool {
+        return type == other.type && level == other.level && pattern == other.pattern &&
+               file == other.file;
+    }
+};
 
 /**
  * 日志输出目的地抽象类

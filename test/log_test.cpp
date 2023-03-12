@@ -1,3 +1,9 @@
+/*
+ * @Description:
+ * @author: wtsclwq
+ * @Date: 2023-03-05 22:27:34
+ * @LastEditTime: 2023-03-12 00:40:48
+ */
 #include <memory>
 
 #include "../src/include/log/log_appender.h"
@@ -5,7 +11,6 @@
 #include "../src/include/log/log_formatter.h"
 #include "../src/include/log/log_level.h"
 #include "../src/include/log/log_manager.h"
-#include "../src/include/log/logger.h"
 
 auto main() -> int {
     auto logger = wtsclwq::SingltonLogManager::GetInstancePtr()->GetGlobalLogger();

@@ -13,8 +13,6 @@
 
 #include "config_var.h"
 #include "config_var_base.h"
-#include "yaml-cpp/node/node.h"
-#include "yaml-cpp/yaml.h"
 namespace wtsclwq {
 
 class Config {
@@ -27,7 +25,7 @@ class Config {
                        const std::string &description) -> typename ConfigVar<T>::ptr;
 
     template <typename T>
-    static auto Lookup(const std::string &name) -> typename ConfigVar<T>::ptr;
+    static auto LookupByName(const std::string &name) -> typename ConfigVar<T>::ptr;
 
     static void LoadFromYaml(const YAML::Node &root);
     static auto LookupBase(const std::string &name) -> ConfigVarBase::ptr;
@@ -35,24 +33,25 @@ class Config {
    private:
     static void ListAllMember(const std::string &name, const YAML::Node &node,
                               std::list<std::pair<std::string, YAML::Node>> &output);
-    static ConfigValMap s_datas;  // NOLINT
+    static auto GetData() -> ConfigValMap & {
+        static ConfigValMap s_data;
+        return s_data;
+    } 
 };
 
 template <typename T>
 auto Config::Lookup(const std::string &name, const T &default_value,
                     const std::string &description) -> typename ConfigVar<T>::ptr {
-    auto iter = s_datas.find(name);
-    if (iter != s_datas.end()) {
+    auto iter = GetData().find(name);
+    if (iter != GetData().end()) {
         auto temp = std::dynamic_pointer_cast<ConfigVar<T>>(iter->second);
         // 转换成功，智能指针非空
         if (temp) {
-            LOG_INFO(ROOT_LOGGER, "Lookup name = " + name + "exists");
             return temp;
         }
-        LOG_INFO(ROOT_LOGGER, "Lookup name = " + name + "exists but type is not" +
-                                  typeid(T).name() + "real type is " +
-                                  iter->second->GetTypeName() + " " +
-                                  iter->second->ToString());
+        std::cerr << "Lookup name = " + name + "exists but type is not" +
+                         typeid(T).name() + "real type is " +
+                         iter->second->GetTypeName() + " " + iter->second->ToString();
         return nullptr;
     }
 
@@ -61,19 +60,19 @@ auto Config::Lookup(const std::string &name, const T &default_value,
     if (name.find_first_not_of(
             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ._0123456789") !=
         std::string::npos) {
-        LOG_ERROR(ROOT_LOGGER, "配置项名称非法" + name);
+        std::cerr << "配置项名称非法" + name;
         throw std::invalid_argument(name);
     }
 
     auto val = std::make_shared<ConfigVar<T>>(name, default_value, description);
-    s_datas[name] = val;
+    GetData()[name] = val;
     return val;
 }
 
 template <typename T>
-auto Config::Lookup(const std::string &name) -> typename ConfigVar<T>::ptr {
-    auto iter = s_datas.find(name);
-    if (iter == s_datas.end()) {
+auto Config::LookupByName(const std::string &name) -> typename ConfigVar<T>::ptr {
+    auto iter = GetData().find(name);
+    if (iter == GetData().end()) {
         return nullptr;
     }
     return std::dynamic_pointer_cast<ConfigVar<T>>(iter->second);

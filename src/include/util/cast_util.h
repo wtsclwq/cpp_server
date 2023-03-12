@@ -2,7 +2,7 @@
  * @Description:
  * @Author: wtsclwq
  * @Date: 2023-03-10 18:29:16
- * @LastEditTime: 2023-03-11 19:02:21
+ * @LastEditTime: 2023-03-12 14:39:07
  * @LastEditors: Please set LastEditors
  */
 
@@ -10,6 +10,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include <cstddef>
+#include <iostream>
 #include <list>
 #include <map>
 #include <set>
@@ -20,10 +21,9 @@
 #include <utility>
 #include <vector>
 
-#include "../log/log_manager.h"
+#include "../log/logger.h"
 #include "boost/lexical_cast.hpp"
 #include "yaml-cpp/node/node.h"
-#include "yaml-cpp/node/parse.h"
 namespace wtsclwq {
 
 /*
@@ -65,9 +65,8 @@ class LexicalCast<std::string, std::vector<T>> {
                 config_val_vector.push_back(LexicalCast<std::string, T>()(sstream.str()));
             }
         } else {
-            LOG_INFO(ROOT_LOGGER,
-                     "LexicalCast<std::string, std::vector>::operator() exception "
-                     "<val_str> is not a YAML sequence");
+            std::cerr << "LexicalCast<std::string, std::vector>::operator() exception "
+                         "<val_str> is not a YAML sequence";
         }
         return config_val_vector;
     }
@@ -119,9 +118,8 @@ class LexicalCast<std::string, std::list<T>> {
                 config_val_list.push_back(LexicalCast<std::string, T>()(sstream.str()));
             }
         } else {
-            LOG_INFO(ROOT_LOGGER,
-                     "LexicalCast<std::string, std::list>::operator() exception "
-                     "<val_str> is not a YAML sequence");
+            std::cerr << "LexicalCast<std::string, std::list>::operator() exception "
+                         "<val_str> is not a YAML sequence";
         }
         return config_val_list;
     }
@@ -173,9 +171,8 @@ class LexicalCast<std::string, std::set<T>> {
                 config_val_set.insert(LexicalCast<std::string, T>()(sstream.str()));
             }
         } else {
-            LOG_INFO(ROOT_LOGGER,
-                     "LexicalCast<std::string, std::set>::operator() exception "
-                     "<val_str> is not a YAML sequence");
+            std::cerr << "LexicalCast<std::string, std::set>::operator() exception "
+                         "<val_str> is not a YAML sequence";
         }
         return config_val_set;
     }
@@ -228,9 +225,9 @@ class LexicalCast<std::string, std::unordered_set<T>> {
                     LexicalCast<std::string, T>()(sstream.str()));
             }
         } else {
-            LOG_INFO(ROOT_LOGGER,
-                     "LexicalCast<std::string, std::unordered_set>::operator() exception "
-                     "<val_str> is not a YAML sequence");
+            std::cerr
+                << "LexicalCast<std::string, std::unordered_set>::operator() exception "
+                   "<val_str> is not a YAML sequence";
         }
         return config_val_unordered_set;
     }
@@ -276,9 +273,8 @@ class LexicalCast<std::string, std::map<std::string, T>> {
                     iter.first.Scalar(), LexicalCast<std::string, T>()(sstream.str())));
             }
         } else {
-            LOG_INFO(ROOT_LOGGER,
-                     "LexicalCast<std::string, std::map>::operator() exception "
-                     "<val_str> is not a YAML map");
+            std::cerr << "LexicalCast<std::string, std::map>::operator() exception "
+                         "<val_str> is not a YAML map";
         }
         return config_val_map;
     }
@@ -321,9 +317,8 @@ class LexicalCast<std::string, std::unordered_map<std::string, T>> {
                     iter.first.Scalar(), LexicalCast<std::string, T>()(sstream.str())));
             }
         } else {
-            LOG_INFO(ROOT_LOGGER,
-                     "LexicalCast<std::string, std::map>::operator() exception "
-                     "<val_str> is not a YAML map");
+            std::cerr << "LexicalCast<std::string, std::map>::operator() exception "
+                         "<val_str> is not a YAML map";
         }
         return config_val_unordered_map;
     }
@@ -352,7 +347,7 @@ class Person {
    public:
     Person() = default;
     std::string m_name{"lwq"};
-    int m_age{18};
+    int m_age{18};  // NOLINT
     bool m_sex{true};
     auto operator==(const Person& other) const -> bool {
         return m_name == other.m_name && m_age == other.m_age && m_sex == other.m_sex;
@@ -401,4 +396,94 @@ class LexicalCast<Person, std::string> {
     }
 };
 
+inline auto parse_attribute(const YAML::Node& node, const std::string& attribute)
+    -> std::string {
+    return node[attribute] ? node[attribute].as<std::string>() : "";
+}
+/*
+ * 针对std::set<LoggerConfig>的偏特化
+ */
+template <>
+class LexicalCast<std::string, std::vector<LoggerConfig>> {
+   public:
+    auto operator()(const std::string& logger_configs_str)  // NOLINT
+        -> std::vector<LoggerConfig> {
+        YAML::Node node = YAML::Load(logger_configs_str);
+
+        std::vector<LoggerConfig> logger_configs_set;
+        if (node.IsSequence()) {
+            for (const auto logger_config_node : node) {
+                LoggerConfig logger_config;
+                logger_config.name = parse_attribute(logger_config_node, "name");
+
+                logger_config.level =
+                    LogLevel::FromString(parse_attribute(logger_config_node, "level"));
+
+                logger_config.pattern = parse_attribute(logger_config_node, "pattern");
+
+                if (logger_config_node["appenders"] &&
+                    logger_config_node["appenders"].IsSequence()) {
+                    for (const auto& appender_config_node :
+                         logger_config_node["appenders"]) {
+                        LogAppenderConfig log_appender_config;
+
+                        auto type_str = parse_attribute(appender_config_node, "type");
+                        if (type_str == "STDOUT") {
+                            log_appender_config.type = LogAppenderConfig::Type::STDOUT;
+                        } else if (type_str == "FILE") {
+                            log_appender_config.type = LogAppenderConfig::Type::FILE;
+                        } else {
+                            log_appender_config.type = LogAppenderConfig::Type::STDOUT;
+                            std::cerr << "目的地类型非法，默认设为STDOUT" << std::endl;
+                        }
+                        log_appender_config.file =
+                            parse_attribute(appender_config_node, "file");
+
+                        log_appender_config.level = LogLevel::FromString(
+                            parse_attribute(appender_config_node, "level"));
+
+                        log_appender_config.pattern =
+                            parse_attribute(appender_config_node, "pattern");
+
+                        logger_config.appenders.push_back(log_appender_config);
+                    }
+                }
+                logger_configs_set.push_back(logger_config);
+            }
+        }
+        return logger_configs_set;
+    }
+};
+
+/*
+ * 针对std::set<LoggerConfig>的偏特化
+ */
+template <>
+class LexicalCast<std::vector<LoggerConfig>, std::string> {
+   public:
+    auto operator()(const std::vector<LoggerConfig>& logger_configs_set) -> std::string {
+        YAML::Node logger_configs_node;
+
+        for (const auto& loggger_config : logger_configs_set) {
+            YAML::Node node;
+            node["name"] = loggger_config.name;
+            node["level"] = static_cast<int>(loggger_config.level);
+            node["pattern"] = loggger_config.pattern;
+            YAML::Node appenders_seq_node;
+            for (const auto& appender_config : loggger_config.appenders) {
+                YAML::Node appender_node;
+                appender_node["type"] = static_cast<int>(appender_config.type);
+                appender_node["file"] = appender_config.file;
+                appender_node["level"] = static_cast<int>(appender_config.level);
+                appender_node["pattern"] = appender_config.pattern;
+                appenders_seq_node.push_back(appender_node);
+            }
+            node["appenders"] = appenders_seq_node;
+            logger_configs_node.push_back(node);
+        }
+        std::stringstream sstream;
+        sstream << logger_configs_node;
+        return sstream.str();
+    }
+};
 }  // namespace wtsclwq

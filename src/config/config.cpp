@@ -2,7 +2,7 @@
  * @Description:
  * @author: wtsclwq
  * @Date: 2023-03-07 23:33:58
- * @LastEditTime: 2023-03-11 00:50:34
+ * @LastEditTime: 2023-03-12 00:43:30
  */
 #include "../include/config/config.h"
 
@@ -17,11 +17,10 @@
 #include "../include/log/log_manager.h"
 #include "yaml-cpp/node/node.h"
 namespace wtsclwq {
-Config::ConfigValMap Config::s_datas;  // NOLINT
 
 auto Config::LookupBase(const std::string &name) -> ConfigVarBase::ptr {
-    auto iter = s_datas.find(name);
-    return iter == s_datas.end() ? nullptr : iter->second;
+    auto iter = GetData().find(name);
+    return iter == GetData().end() ? nullptr : iter->second;
 }
 
 void Config::LoadFromYaml(const YAML::Node &root) {
@@ -51,7 +50,8 @@ void Config::LoadFromYaml(const YAML::Node &root) {
 
 void Config::ListAllMember(const std::string &name, const YAML::Node &node,
                            std::list<std::pair<std::string, YAML::Node>> &output) {
-    if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ._0123456789") !=
+    if (name.find_first_not_of(
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ._0123456789") !=
         std::string::npos) {
         std::ostringstream oss;
         oss << "配置项名称非法" << name << ":" << node;
