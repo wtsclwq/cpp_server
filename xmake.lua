@@ -2,10 +2,17 @@ add_rules("mode.debug", "mode.release")
 add_requires("boost","yaml-cpp")
 set_languages("C++17")
 
+target("util")
+    set_kind("shared")
+    set_languages("C++17")
+    add_files("src/util/*.cpp")
+    add_packages("boost","yaml-cpp")
+
 target("log")
     set_kind("shared")
     set_languages("C++17")
     add_files("src/log/*.cpp")
+    add_deps("util")
     add_packages("boost","yaml-cpp")
     
 target("config")
@@ -14,23 +21,40 @@ target("config")
     add_files("src/config/*.cpp")
     add_packages("boost","yaml-cpp")
 
+target("concurrency")
+    set_kind("shared")
+    set_languages("C++17")
+    add_files("src/concurrency/*.cpp")
+    add_deps("log","config")
+    add_packages("boost","yaml-cpp")
+
 target("log_test")
     set_kind("binary")
     set_languages("C++17") 
     add_files("test/log_test.cpp")
-    add_deps("log")
-    add_deps("config")
-
+    add_deps("log","util","config","concurrency")
     add_packages("boost","yaml-cpp")
 
 target("config_test")
     set_kind("binary")
     set_languages("C++17") 
     add_files("test/config_test.cpp")
-    add_deps("log")
-    add_deps("config")
+    add_deps("log","util","config","concurrency")
     add_packages("boost","yaml-cpp")
 
+target("util_test")
+    set_kind("binary")
+    set_languages("C++17") 
+    add_files("test/util_test.cpp")
+    add_deps("log","util","config","concurrency")
+    add_packages("boost","yaml-cpp")
+
+target("concurrency_test")
+    set_kind("binary")
+    set_languages("C++17") 
+    add_files("test/concurrency_test.cpp")
+    add_deps("log","util","config","concurrency")
+    add_packages("boost","yaml-cpp")
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
 --

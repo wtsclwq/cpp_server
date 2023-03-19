@@ -1,8 +1,14 @@
+/*
+ * @Description:
+ * @LastEditTime: 2023-03-19 16:43:28
+ */
 #include "../include/log/log_formatter.h"
 
 #include <iostream>
 #include <map>
+#include <memory>
 
+#include "../include/util/macro.h"
 namespace wtsclwq {
 
 /**
@@ -18,21 +24,24 @@ namespace wtsclwq {
  * %T 输出制表符
  * */
 
-static thread_local 
-std::map<char, LogFormatter::FormatItem::ptr> format_item_map{ // NOLINT
-    {'p', std::make_shared<LevelFormatItem>()},
-    {'f', std::make_shared<FilenameFormatItem>()},
-    {'l', std::make_shared<LineFormatItem>()},
-    {'d', std::make_shared<TimeFormatItem>()},
-    {'t', std::make_shared<ThreadIDFormatItem>()},
-    {'F', std::make_shared<FiberIDFormatItem>()},
-    {'m', std::make_shared<ContentFormatItem>()},
-    {'n', std::make_shared<NewLineFormatItem>()},
-    {'%', std::make_shared<PercentSignFormatItem>()},
-    {'T', std::make_shared<TabFormatItem>()},
-};
+static thread_local std::map<char, LogFormatter::FormatItem::ptr>
+    format_item_map{
+        // NOLINT
+        {'p', std::make_shared<LevelFormatItem>()},
+        {'f', std::make_shared<FilenameFormatItem>()},
+        {'l', std::make_shared<LineFormatItem>()},
+        {'d', std::make_shared<TimeFormatItem>()},
+        {'N', std::make_shared<ThreadNameFormatItem>()},
+        {'t', std::make_shared<ThreadIDFormatItem>()},
+        {'F', std::make_shared<FiberIDFormatItem>()},
+        {'m', std::make_shared<ContentFormatItem>()},
+        {'n', std::make_shared<NewLineFormatItem>()},
+        {'%', std::make_shared<PercentSignFormatItem>()},
+        {'T', std::make_shared<TabFormatItem>()},
+    };
 
-LogFormatter::LogFormatter(std::string pattern) : m_pattern(std::move(pattern)) {
+LogFormatter::LogFormatter(std::string pattern)
+    : m_pattern(std::move(pattern)) {
     Init();
 }
 
@@ -71,7 +80,8 @@ void LogFormatter::Init() {
                 break;
             // 处理占位符
             case CREATE_STATUS:
-                assert(("format_item_map没有被正确的初始化", !format_item_map.empty())); // NOLINT
+                assert(("format_item_map没有被正确的初始化",  // NOLINT
+                        !format_item_map.empty()));
                 auto iter = format_item_map.find(m_pattern[i]);
                 if (iter == format_item_map.end()) {
                     m_items.push_back(

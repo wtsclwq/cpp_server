@@ -2,7 +2,7 @@
  * @Description:
  * @author: wtsclwq
  * @Date: 2023-03-05 22:27:34
- * @LastEditTime: 2023-03-12 12:09:20
+ * @LastEditTime: 2023-03-19 16:37:11
  */
 #include "../include/log/logger.h"
 
@@ -10,7 +10,7 @@ namespace wtsclwq {
 
 Logger::Logger()
     : m_name("default"), m_level(LogLevel::Level::DEBUG),
-      m_pattern("[%d] [%p] [%t:%F] [%f:%l]%T%m%n"),
+      m_pattern("[%d] [%p] [%N %t:%F] [%f:%l]%T%m%n"),
       m_formatter(std::make_shared<LogFormatter>(m_pattern)) {
     ;
 }
@@ -35,7 +35,8 @@ void Logger::AddAppender(LogAppender::ptr&& log_appender) {
 }
 
 void Logger::DelAppender(const LogAppender::ptr& log_appender) {
-    for (auto iter = m_log_appenders.begin(); iter != m_log_appenders.end(); iter++) {
+    for (auto iter = m_log_appenders.begin(); iter != m_log_appenders.end();
+         iter++) {
         if (*iter == log_appender) {
             m_log_appenders.erase(iter);
         }

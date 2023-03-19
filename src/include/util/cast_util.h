@@ -2,7 +2,7 @@
  * @Description:
  * @Author: wtsclwq
  * @Date: 2023-03-10 18:29:16
- * @LastEditTime: 2023-03-12 14:39:07
+ * @LastEditTime: 2023-03-17 22:32:53
  * @LastEditors: Please set LastEditors
  */
 
@@ -23,7 +23,6 @@
 
 #include "../log/logger.h"
 #include "boost/lexical_cast.hpp"
-#include "yaml-cpp/node/node.h"
 namespace wtsclwq {
 
 /*
