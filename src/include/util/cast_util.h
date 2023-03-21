@@ -2,7 +2,7 @@
  * @Description:
  * @Author: wtsclwq
  * @Date: 2023-03-10 18:29:16
- * @LastEditTime: 2023-03-17 22:32:53
+ * @LastEditTime: 2023-03-21 12:39:45
  * @LastEditors: Please set LastEditors
  */
 
@@ -21,8 +21,8 @@
 #include <utility>
 #include <vector>
 
-#include "../log/logger.h"
 #include "boost/lexical_cast.hpp"
+
 namespace wtsclwq {
 
 /*
@@ -31,7 +31,7 @@ namespace wtsclwq {
  */
 template <typename F, typename T>
 class LexicalCast {
-   public:
+  public:
     /**
      * @description: 重载函数调用运算符()，利用boost/lexical_cast转换基础类型
      * @author: wtsclwq
@@ -45,7 +45,7 @@ class LexicalCast {
  */
 template <typename T>
 class LexicalCast<std::string, std::vector<T>> {
-   public:
+  public:
     auto operator()(const std::string& val_str) -> std::vector<T> {
         YAML::Node node;
         // 调用 YAML::Load 解析传入的字符串，解析失败会抛出异常
@@ -61,10 +61,12 @@ class LexicalCast<std::string, std::vector<T>> {
                 // 递归解析，直到 T 为基本类型,
                 // 因为node可能会是嵌套的，可能嵌套了vector、map、set或者是基础类型，
                 // vector、set或者map都可以自动匹配到专属的偏特化模板类
-                config_val_vector.push_back(LexicalCast<std::string, T>()(sstream.str()));
+                config_val_vector.push_back(
+                    LexicalCast<std::string, T>()(sstream.str()));
             }
         } else {
-            std::cerr << "LexicalCast<std::string, std::vector>::operator() exception "
+            std::cerr << "LexicalCast<std::string, std::vector>::operator() "
+                         "exception "
                          "<val_str> is not a YAML sequence";
         }
         return config_val_vector;
@@ -77,7 +79,7 @@ class LexicalCast<std::string, std::vector<T>> {
  */
 template <typename T>
 class LexicalCast<std::vector<T>, std::string> {
-   public:
+  public:
     auto operator()(const std::vector<T>& config_var_vec) -> std::string {
         YAML::Node node;
         for (auto& item : config_var_vec) {
@@ -98,7 +100,7 @@ class LexicalCast<std::vector<T>, std::string> {
  */
 template <typename T>
 class LexicalCast<std::string, std::list<T>> {
-   public:
+  public:
     auto operator()(const std::string& val_str) -> std::list<T> {
         YAML::Node node;
         // 调用 YAML::Load 解析传入的字符串，解析失败会抛出异常
@@ -114,11 +116,13 @@ class LexicalCast<std::string, std::list<T>> {
                 // 递归解析，直到 T 为基本类型,
                 // 因为node可能会是嵌套的，可能嵌套了vector、map、set或者是基础类型，
                 // vector、set或者map都可以自动匹配到专属的偏特化模板类
-                config_val_list.push_back(LexicalCast<std::string, T>()(sstream.str()));
+                config_val_list.push_back(
+                    LexicalCast<std::string, T>()(sstream.str()));
             }
         } else {
-            std::cerr << "LexicalCast<std::string, std::list>::operator() exception "
-                         "<val_str> is not a YAML sequence";
+            std::cerr
+                << "LexicalCast<std::string, std::list>::operator() exception "
+                   "<val_str> is not a YAML sequence";
         }
         return config_val_list;
     }
@@ -130,7 +134,7 @@ class LexicalCast<std::string, std::list<T>> {
  */
 template <typename T>
 class LexicalCast<std::list<T>, std::string> {
-   public:
+  public:
     auto operator()(const std::list<T>& config_val_list) -> std::string {
         YAML::Node node;
         for (auto& item : config_val_list) {
@@ -151,7 +155,7 @@ class LexicalCast<std::list<T>, std::string> {
  */
 template <typename T>
 class LexicalCast<std::string, std::set<T>> {
-   public:
+  public:
     auto operator()(const std::string& val_str) -> std::set<T> {
         YAML::Node node;
         // 调用 YAML::Load 解析传入的字符串，解析失败会抛出异常
@@ -167,11 +171,13 @@ class LexicalCast<std::string, std::set<T>> {
                 // 递归解析，直到 T 为基本类型,
                 // 因为node可能会是嵌套的，可能嵌套了vector、map、set或者是基础类型，
                 // vector、set或者map都可以自动匹配到专属的偏特化模板类
-                config_val_set.insert(LexicalCast<std::string, T>()(sstream.str()));
+                config_val_set.insert(
+                    LexicalCast<std::string, T>()(sstream.str()));
             }
         } else {
-            std::cerr << "LexicalCast<std::string, std::set>::operator() exception "
-                         "<val_str> is not a YAML sequence";
+            std::cerr
+                << "LexicalCast<std::string, std::set>::operator() exception "
+                   "<val_str> is not a YAML sequence";
         }
         return config_val_set;
     }
@@ -183,7 +189,7 @@ class LexicalCast<std::string, std::set<T>> {
  */
 template <typename T>
 class LexicalCast<std::set<T>, std::string> {
-   public:
+  public:
     auto operator()(const std::set<T>& config_val_set) -> std::string {
         YAML::Node node;
         for (auto& item : config_val_set) {
@@ -204,7 +210,7 @@ class LexicalCast<std::set<T>, std::string> {
  */
 template <typename T>
 class LexicalCast<std::string, std::unordered_set<T>> {
-   public:
+  public:
     auto operator()(const std::string& val_str) -> std::unordered_set<T> {
         YAML::Node node;
         // 调用 YAML::Load 解析传入的字符串，解析失败会抛出异常
@@ -224,9 +230,9 @@ class LexicalCast<std::string, std::unordered_set<T>> {
                     LexicalCast<std::string, T>()(sstream.str()));
             }
         } else {
-            std::cerr
-                << "LexicalCast<std::string, std::unordered_set>::operator() exception "
-                   "<val_str> is not a YAML sequence";
+            std::cerr << "LexicalCast<std::string, "
+                         "std::unordered_set>::operator() exception "
+                         "<val_str> is not a YAML sequence";
         }
         return config_val_unordered_set;
     }
@@ -238,8 +244,9 @@ class LexicalCast<std::string, std::unordered_set<T>> {
  */
 template <typename T>
 class LexicalCast<std::unordered_set<T>, std::string> {
-   public:
-    auto operator()(const std::unordered_set<T>& config_val_set) -> std::string {
+  public:
+    auto operator()(const std::unordered_set<T>& config_val_set)
+        -> std::string {
         YAML::Node node;
         for (auto& item : config_val_set) {
             // 递归解析，直到 T 为基本类型,
@@ -259,7 +266,7 @@ class LexicalCast<std::unordered_set<T>, std::string> {
  */
 template <typename T>
 class LexicalCast<std::string, std::map<std::string, T>> {
-   public:
+  public:
     auto operator()(const std::string& val_str) -> std::map<std::string, T> {
         YAML::Node node = YAML::Load(val_str);
         std::map<std::string, T> config_val_map;
@@ -269,11 +276,13 @@ class LexicalCast<std::string, std::map<std::string, T>> {
                 sstream.str("");
                 sstream << iter.second;
                 config_val_map.insert(std::make_pair(
-                    iter.first.Scalar(), LexicalCast<std::string, T>()(sstream.str())));
+                    iter.first.Scalar(),
+                    LexicalCast<std::string, T>()(sstream.str())));
             }
         } else {
-            std::cerr << "LexicalCast<std::string, std::map>::operator() exception "
-                         "<val_str> is not a YAML map";
+            std::cerr
+                << "LexicalCast<std::string, std::map>::operator() exception "
+                   "<val_str> is not a YAML map";
         }
         return config_val_map;
     }
@@ -285,11 +294,13 @@ class LexicalCast<std::string, std::map<std::string, T>> {
  */
 template <typename T>
 class LexicalCast<std::map<std::string, T>, std::string> {
-   public:
-    auto operator()(const std::map<std::string, T>& config_val_map) -> std::string {
+  public:
+    auto operator()(const std::map<std::string, T>& config_val_map)
+        -> std::string {
         YAML::Node node;
         for (auto& item : config_val_map) {
-            node[item.first] = YAML::Load(LexicalCast<T, std::string>()(item.second));
+            node[item.first] =
+                YAML::Load(LexicalCast<T, std::string>()(item.second));
         }
         std::stringstream sstream;
         sstream << node;
@@ -303,8 +314,9 @@ class LexicalCast<std::map<std::string, T>, std::string> {
  */
 template <typename T>
 class LexicalCast<std::string, std::unordered_map<std::string, T>> {
-   public:
-    auto operator()(const std::string& val_str) -> std::unordered_map<std::string, T> {
+  public:
+    auto operator()(const std::string& val_str)
+        -> std::unordered_map<std::string, T> {
         YAML::Node node = YAML::Load(val_str);
         std::unordered_map<std::string, T> config_val_unordered_map;
         if (node.IsMap()) {
@@ -313,11 +325,13 @@ class LexicalCast<std::string, std::unordered_map<std::string, T>> {
                 sstream.str("");
                 sstream << iter.second;
                 config_val_unordered_map.insert(std::make_pair(
-                    iter.first.Scalar(), LexicalCast<std::string, T>()(sstream.str())));
+                    iter.first.Scalar(),
+                    LexicalCast<std::string, T>()(sstream.str())));
             }
         } else {
-            std::cerr << "LexicalCast<std::string, std::map>::operator() exception "
-                         "<val_str> is not a YAML map";
+            std::cerr
+                << "LexicalCast<std::string, std::map>::operator() exception "
+                   "<val_str> is not a YAML map";
         }
         return config_val_unordered_map;
     }
@@ -329,12 +343,14 @@ class LexicalCast<std::string, std::unordered_map<std::string, T>> {
  */
 template <typename T>
 class LexicalCast<std::unordered_map<std::string, T>, std::string> {
-   public:
-    auto operator()(const std::unordered_map<std::string, T>& config_val_unordered_map)
+  public:
+    auto operator()(
+        const std::unordered_map<std::string, T>& config_val_unordered_map)
         -> std::string {
         YAML::Node node;
         for (auto& item : config_val_unordered_map) {
-            node[item.first] = YAML::Load(LexicalCast<T, std::string>()(item.second));
+            node[item.first] =
+                YAML::Load(LexicalCast<T, std::string>()(item.second));
         }
         std::stringstream sstream;
         sstream << node;
@@ -343,16 +359,17 @@ class LexicalCast<std::unordered_map<std::string, T>, std::string> {
 };
 
 class Person {
-   public:
+  public:
     Person() = default;
     std::string m_name{"lwq"};
     int m_age{18};  // NOLINT
     bool m_sex{true};
     auto operator==(const Person& other) const -> bool {
-        return m_name == other.m_name && m_age == other.m_age && m_sex == other.m_sex;
+        return m_name == other.m_name && m_age == other.m_age &&
+               m_sex == other.m_sex;
     }
 
-    auto ToString() const -> std::string {
+    [[nodiscard]] auto ToString() const -> std::string {
         std::stringstream sstream;
         sstream << "[Person name = " << m_name << " age = " << m_age
                 << " sex = " << (m_sex ? "男" : "女") << "]";
@@ -366,7 +383,7 @@ class Person {
  */
 template <>
 class LexicalCast<std::string, Person> {
-   public:
+  public:
     auto operator()(const std::string& config_str_person) -> Person {
         YAML::Node node = YAML::Load(config_str_person);
         Person person;
@@ -383,7 +400,7 @@ class LexicalCast<std::string, Person> {
  */
 template <>
 class LexicalCast<Person, std::string> {
-   public:
+  public:
     auto operator()(const Person& config_val_person) -> std::string {
         YAML::Node node;
         node["name"] = config_val_person.m_name;
@@ -391,97 +408,6 @@ class LexicalCast<Person, std::string> {
         node["sex"] = config_val_person.m_sex;
         std::stringstream sstream;
         sstream << node;
-        return sstream.str();
-    }
-};
-
-inline auto parse_attribute(const YAML::Node& node, const std::string& attribute)
-    -> std::string {
-    return node[attribute] ? node[attribute].as<std::string>() : "";
-}
-/*
- * 针对std::set<LoggerConfig>的偏特化
- */
-template <>
-class LexicalCast<std::string, std::vector<LoggerConfig>> {
-   public:
-    auto operator()(const std::string& logger_configs_str)  // NOLINT
-        -> std::vector<LoggerConfig> {
-        YAML::Node node = YAML::Load(logger_configs_str);
-
-        std::vector<LoggerConfig> logger_configs_set;
-        if (node.IsSequence()) {
-            for (const auto logger_config_node : node) {
-                LoggerConfig logger_config;
-                logger_config.name = parse_attribute(logger_config_node, "name");
-
-                logger_config.level =
-                    LogLevel::FromString(parse_attribute(logger_config_node, "level"));
-
-                logger_config.pattern = parse_attribute(logger_config_node, "pattern");
-
-                if (logger_config_node["appenders"] &&
-                    logger_config_node["appenders"].IsSequence()) {
-                    for (const auto& appender_config_node :
-                         logger_config_node["appenders"]) {
-                        LogAppenderConfig log_appender_config;
-
-                        auto type_str = parse_attribute(appender_config_node, "type");
-                        if (type_str == "STDOUT") {
-                            log_appender_config.type = LogAppenderConfig::Type::STDOUT;
-                        } else if (type_str == "FILE") {
-                            log_appender_config.type = LogAppenderConfig::Type::FILE;
-                        } else {
-                            log_appender_config.type = LogAppenderConfig::Type::STDOUT;
-                            std::cerr << "目的地类型非法，默认设为STDOUT" << std::endl;
-                        }
-                        log_appender_config.file =
-                            parse_attribute(appender_config_node, "file");
-
-                        log_appender_config.level = LogLevel::FromString(
-                            parse_attribute(appender_config_node, "level"));
-
-                        log_appender_config.pattern =
-                            parse_attribute(appender_config_node, "pattern");
-
-                        logger_config.appenders.push_back(log_appender_config);
-                    }
-                }
-                logger_configs_set.push_back(logger_config);
-            }
-        }
-        return logger_configs_set;
-    }
-};
-
-/*
- * 针对std::set<LoggerConfig>的偏特化
- */
-template <>
-class LexicalCast<std::vector<LoggerConfig>, std::string> {
-   public:
-    auto operator()(const std::vector<LoggerConfig>& logger_configs_set) -> std::string {
-        YAML::Node logger_configs_node;
-
-        for (const auto& loggger_config : logger_configs_set) {
-            YAML::Node node;
-            node["name"] = loggger_config.name;
-            node["level"] = static_cast<int>(loggger_config.level);
-            node["pattern"] = loggger_config.pattern;
-            YAML::Node appenders_seq_node;
-            for (const auto& appender_config : loggger_config.appenders) {
-                YAML::Node appender_node;
-                appender_node["type"] = static_cast<int>(appender_config.type);
-                appender_node["file"] = appender_config.file;
-                appender_node["level"] = static_cast<int>(appender_config.level);
-                appender_node["pattern"] = appender_config.pattern;
-                appenders_seq_node.push_back(appender_node);
-            }
-            node["appenders"] = appenders_seq_node;
-            logger_configs_node.push_back(node);
-        }
-        std::stringstream sstream;
-        sstream << logger_configs_node;
         return sstream.str();
     }
 };

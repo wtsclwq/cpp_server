@@ -2,7 +2,7 @@
  * @Description:
  * @author: wtsclwq
  * @Date: 2023-03-18 17:44:24
- * @LastEditTime: 2023-03-19 16:42:29
+ * @LastEditTime: 2023-03-19 23:28:19
  */
 #include "../include/concurrency/fiber.h"
 
@@ -22,7 +22,7 @@
 
 namespace wtsclwq {
 
-Logger::ptr sys_logger = GET_LOGGER_BY_NAME("system");
+static Logger::ptr sys_logger = GET_LOGGER_BY_NAME("system");
 
 namespace FiberInfo {
 static std::atomic<uint64_t> s_fiber_id{0};

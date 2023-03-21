@@ -5,9 +5,11 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <vector>
 
+#include "../concurrency/lock.h"
 #include "log_event.h"
 #include "log_level.h"
 /**
@@ -18,7 +20,7 @@ namespace wtsclwq {
 class LogFormatter {
   public:
     using ptr = std::shared_ptr<LogFormatter>;
-
+    using MutexType = std::mutex;
     explicit LogFormatter(std::string pattern);
     auto Format(const LogEvent::ptr& log_event) -> std::string;
     void Init();

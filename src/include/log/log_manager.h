@@ -2,12 +2,13 @@
  * @Description:
  * @author: wtsclwq
  * @Date: 2023-03-05 22:27:34
- * @LastEditTime: 2023-03-19 16:29:57
+ * @LastEditTime: 2023-03-21 17:47:58
  */
 #pragma once
 
 #include <map>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <vector>
 
@@ -76,17 +77,18 @@ namespace wtsclwq {
 class LogManager {
   public:
     using ptr = std::shared_ptr<LogManager>;
-
+    using MutexType = std::mutex;
     friend struct LogIniter;
     explicit LogManager();
     auto GetLogger(const std::string &name) -> Logger::ptr;
     auto GetGlobalLogger() -> Logger::ptr;
 
   private:
-    void Init();
+    void Init(const std::vector<LoggerConfig> &logger_config_vec = {});
     void EnsureGlobalLogger();
 
     std::map<std::string, Logger::ptr> m_logger_map;
+    MutexType m_mutex;
 };
 
 using SingltonLogManager = SingletonPtr<LogManager>;
@@ -95,15 +97,14 @@ struct LogIniter {
     LogIniter() {
         auto log_congig_set = Config::Lookup<std::vector<LoggerConfig>>(
             "logs", {}, "日志器配置项目集合");
-        log_congig_set->AddListener([](const std::vector<LoggerConfig> &,
-                                       const std::vector<LoggerConfig> &) {
-            LOG_INFO(ROOT_LOGGER, "日志器配置变动，重新初始化日志器");
-            SingltonLogManager::GetInstancePtr()->Init();
-        });
+
+        log_congig_set->AddListener(
+            [](const std::vector<LoggerConfig> & /*old_config_vec*/,
+               const std::vector<LoggerConfig> &new_config_vec) {
+                LOG_INFO(ROOT_LOGGER, "日志器配置变动，重新初始化日志器");
+                SingltonLogManager::GetInstancePtr()->Init(new_config_vec);
+            });
     }
 };
-
-// static对象在main()之前初始化
-static LogIniter __log_init__;  // NOLINT
 
 }  // namespace wtsclwq

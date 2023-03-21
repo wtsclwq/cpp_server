@@ -16,32 +16,44 @@
 namespace wtsclwq {
 
 class Config {
-   public:
+  public:
     // map里存储基类，这样可以避免编译时就要实例化模板类
     using ConfigValMap = std::map<std::string, ConfigVarBase::ptr>;
 
     template <typename T>
     static auto Lookup(const std::string &name, const T &default_value,
-                       const std::string &description) -> typename ConfigVar<T>::ptr;
+                       const std::string &description) ->
+        typename ConfigVar<T>::ptr;
 
     template <typename T>
-    static auto LookupByName(const std::string &name) -> typename ConfigVar<T>::ptr;
+    static auto LookupByName(const std::string &name) ->
+        typename ConfigVar<T>::ptr;
 
     static void LoadFromYaml(const YAML::Node &root);
+
     static auto LookupBase(const std::string &name) -> ConfigVarBase::ptr;
 
-   private:
-    static void ListAllMember(const std::string &name, const YAML::Node &node,
-                              std::list<std::pair<std::string, YAML::Node>> &output);
+  private:
+    static void ListAllMember(
+        const std::string &name, const YAML::Node &node,
+        std::list<std::pair<std::string, YAML::Node>> &output);
+
     static auto GetData() -> ConfigValMap & {
         static ConfigValMap s_data;
         return s_data;
-    } 
+    }
+    static auto GetRWLock() -> RWLock & {
+        static RWLock s_rwlock;
+        return s_rwlock;
+    }
 };
 
 template <typename T>
 auto Config::Lookup(const std::string &name, const T &default_value,
-                    const std::string &description) -> typename ConfigVar<T>::ptr {
+                    const std::string &description) ->
+    typename ConfigVar<T>::ptr {
+    ScopedWriteLock lock(GetRWLock());
+
     auto iter = GetData().find(name);
     if (iter != GetData().end()) {
         auto temp = std::dynamic_pointer_cast<ConfigVar<T>>(iter->second);
@@ -51,15 +63,15 @@ auto Config::Lookup(const std::string &name, const T &default_value,
         }
         std::cerr << "Lookup name = " + name + "exists but type is not" +
                          typeid(T).name() + "real type is " +
-                         iter->second->GetTypeName() + " " + iter->second->ToString();
+                         iter->second->GetTypeName() + " " +
+                         iter->second->ToString();
         return nullptr;
     }
 
     // 没找到的话，添加一个默认配置
     // 判断配置项名称是否合法
-    if (name.find_first_not_of(
-            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ._0123456789") !=
-        std::string::npos) {
+    if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTU"
+                               "VWXYZ._0123456789") != std::string::npos) {
         std::cerr << "配置项名称非法" + name;
         throw std::invalid_argument(name);
     }
@@ -70,7 +82,10 @@ auto Config::Lookup(const std::string &name, const T &default_value,
 }
 
 template <typename T>
-auto Config::LookupByName(const std::string &name) -> typename ConfigVar<T>::ptr {
+auto Config::LookupByName(const std::string &name) ->
+    typename ConfigVar<T>::ptr {
+    ScopedReadLock lock(GetRWLock());
+
     auto iter = GetData().find(name);
     if (iter == GetData().end()) {
         return nullptr;

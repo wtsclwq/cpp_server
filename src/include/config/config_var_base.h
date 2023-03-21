@@ -5,7 +5,7 @@
 
 namespace wtsclwq {
 class ConfigVarBase {
-   public:
+  public:
     using ptr = std::shared_ptr<ConfigVarBase>;
 
     ConfigVarBase(const ConfigVarBase &) = default;
@@ -25,7 +25,7 @@ class ConfigVarBase {
     virtual auto FromString(std::string val) -> bool = 0;
     virtual auto GetTypeName() const -> std::string = 0;
 
-   private:
+  private:
     std::string m_name;
     std::string m_description;
 };

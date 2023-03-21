@@ -2,9 +2,11 @@
  * @Description:
  * @author: wtsclwq
  * @Date: 2023-03-17 22:29:33
- * @LastEditTime: 2023-03-19 16:46:14
+ * @LastEditTime: 2023-03-20 23:51:29
  */
 #include <execinfo.h>
+#include <sys/syscall.h>
+#include <unistd.h>
 
 #include <cstdlib>
 #include <sstream>
@@ -16,10 +18,10 @@
 
 namespace wtsclwq {
 
-auto sys_logger = GET_LOGGER_BY_NAME("system");  // NOLINT
+static Logger::ptr sys_logger = GET_LOGGER_BY_NAME("system");  // NOLINT
 
 auto GetThreadName() -> std::string { return "default"; }
-auto GetThreadId() -> uint64_t { return 0; }
+auto GetThreadId() -> pid_t { return static_cast<pid_t>(syscall(SYS_gettid)); }
 auto GetFiberId() -> uint64_t { return Fiber::GetCurFiberId(); }
 
 void Backtrace(std::vector<std::string> &back_trace, int size, int skip) {

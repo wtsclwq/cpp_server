@@ -2,7 +2,7 @@
  * @Description:
  * @author: wtsclwq
  * @Date: 2023-03-07 23:33:58
- * @LastEditTime: 2023-03-12 00:43:30
+ * @LastEditTime: 2023-03-21 16:31:32
  */
 #include "../include/config/config.h"
 
@@ -24,6 +24,8 @@ auto Config::LookupBase(const std::string &name) -> ConfigVarBase::ptr {
 }
 
 void Config::LoadFromYaml(const YAML::Node &root) {
+    // ScopedWriteLock lock(GetRWLock());
+
     std::list<std::pair<std::string, YAML::Node>> all_nodes;
     ListAllMember("", root, all_nodes);
 
@@ -48,11 +50,11 @@ void Config::LoadFromYaml(const YAML::Node &root) {
     }
 }
 
-void Config::ListAllMember(const std::string &name, const YAML::Node &node,
-                           std::list<std::pair<std::string, YAML::Node>> &output) {
-    if (name.find_first_not_of(
-            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ._0123456789") !=
-        std::string::npos) {
+void Config::ListAllMember(
+    const std::string &name, const YAML::Node &node,
+    std::list<std::pair<std::string, YAML::Node>> &output) {
+    if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTU"
+                               "VWXYZ._0123456789") != std::string::npos) {
         std::ostringstream oss;
         oss << "配置项名称非法" << name << ":" << node;
         LOG_ERROR(ROOT_LOGGER, oss.str());
@@ -72,12 +74,12 @@ void Config::ListAllMember(const std::string &name, const YAML::Node &node,
     // 当 YAML::Node 为映射型节点，使用迭代器遍历
     if (node.IsMap()) {
         for (auto iter = node.begin(); iter != node.end(); ++iter) {
-            ListAllMember(
-                name.empty() ? iter->first.Scalar() : name + "." + iter->first.Scalar(),
-                iter->second, output);
+            ListAllMember(name.empty() ? iter->first.Scalar()
+                                       : name + "." + iter->first.Scalar(),
+                          iter->second, output);
         }
-    } /* else if (node.IsSequence()) {  // 当 YAML::Node 为序列型节点，使用下标遍历
-        for (size_t i = 0; i < node.size(); ++i) {
+    } /* else if (node.IsSequence()) {  // 当 YAML::Node
+    为序列型节点，使用下标遍历 for (size_t i = 0; i < node.size(); ++i) {
             ListAllMember(name + "." + std::to_string(i), node[i], output);
         }
     } */

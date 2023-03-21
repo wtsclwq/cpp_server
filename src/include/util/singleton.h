@@ -11,7 +11,7 @@ namespace wtsclwq {
 
 template <typename T>
 class Singleton final {
-   public:
+  public:
     // 可变参数模板，适配有参构造和无参构造
     template <typename... Args>
     static auto GetInstance(Args&&... args) -> T* {
@@ -23,7 +23,7 @@ class Singleton final {
 
 template <typename T>
 class SingletonPtr final {
-   public:
+  public:
     // 可变参数模板，适配有参构造和无参构造
     template <typename... Args>
     static auto GetInstancePtr(Args&&... args) -> std::shared_ptr<T> {
