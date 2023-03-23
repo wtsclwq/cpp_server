@@ -47,6 +47,13 @@ target("concurrency_test")
     add_files("test/concurrency_test.cpp")
     add_deps("log","util","config","concurrency")
     add_packages("boost","yaml-cpp")
+
+target("scheduler_test")
+    set_kind("binary")
+    add_files("test/scheduler_test.cpp")
+    add_deps("log","util","config","concurrency")
+    add_packages("boost","yaml-cpp")
+
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
 --

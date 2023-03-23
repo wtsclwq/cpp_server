@@ -2,7 +2,7 @@
  * @Description:
  * @author: wtsclwq
  * @Date: 2023-03-17 23:50:28
- * @LastEditTime: 2023-03-19 16:42:55
+ * @LastEditTime: 2023-03-23 22:40:33
  */
 #pragma once
 
@@ -67,11 +67,15 @@ class Fiber : public std::enable_shared_from_this<Fiber> {
      */
     void SwapIn();
 
+    void SwapInFromScheduler();
+
     /**
      * @description: 将this协程切换到后台，让主协程重回cur协程
      * @return {*}
      */
     void SwapOut();
+
+    void SwapOutBackScheduler();
 
     /**
      * @description: 设置正在运行的协程为@param
@@ -80,6 +84,12 @@ class Fiber : public std::enable_shared_from_this<Fiber> {
      */
 
     auto GetId() const -> uint64_t;
+
+    auto GetState() const -> Fiber::State;
+
+    void SetState(Fiber::State state);
+
+    auto IsFinish() const noexcept -> bool;
 
     /* ************************************************************** */
     /* ************************************************************** */

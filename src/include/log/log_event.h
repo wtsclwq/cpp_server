@@ -1,6 +1,6 @@
 /*
  * @Description:
- * @LastEditTime: 2023-03-19 16:26:38
+ * @LastEditTime: 2023-03-21 18:04:13
  */
 #pragma once
 
@@ -27,14 +27,18 @@ class LogEvent {
           m_fiber_id(fiber_id), m_time(time), m_content(std::move(content)),
           m_level(level) {}
 
-    auto GetFileName() const -> std::string { return m_file_name; }
-    auto GetLevel() const -> LogLevel::Level { return m_level; }
-    auto GetLine() const -> uint32_t { return m_line; }
-    auto GetThreadName() const -> std::string { return m_thread_name; }
-    auto GetThreadId() const -> uint32_t { return m_thread_id; }
-    auto GetFiberId() const -> uint32_t { return m_fiber_id; }
-    auto GetTime() const -> time_t { return m_time; }
-    auto GetContent() -> std::string { return m_content; }
+    [[nodiscard]] auto GetFileName() const -> std::string {
+        return m_file_name;
+    }
+    [[nodiscard]] auto GetLevel() const -> LogLevel::Level { return m_level; }
+    [[nodiscard]] auto GetLine() const -> uint32_t { return m_line; }
+    [[nodiscard]] auto GetThreadName() const -> std::string {
+        return m_thread_name;
+    }
+    [[nodiscard]] auto GetThreadId() const -> uint32_t { return m_thread_id; }
+    [[nodiscard]] auto GetFiberId() const -> uint32_t { return m_fiber_id; }
+    [[nodiscard]] auto GetTime() const -> time_t { return m_time; }
+    [[nodiscard]] auto GetContent() -> std::string { return m_content; }
 
     void SetLevel(LogLevel::Level level) { m_level = level; }
 

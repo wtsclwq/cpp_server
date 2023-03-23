@@ -1,6 +1,6 @@
 /*
  * @Description:
- * @LastEditTime: 2023-03-21 16:29:22
+ * @LastEditTime: 2023-03-23 20:37:02
  */
 #include <unistd.h>
 
@@ -16,36 +16,50 @@
 #include "yaml-cpp/node/parse.h"
 
 auto logger = GET_LOGGER_BY_NAME("system");
-
 void run_in_fiber() {
-    LOG_INFO(logger, "run_in_fiber 111...");
+    LOG_CUSTOM_INFO(logger, "thread: %s run_in_fiber 111...",
+                    wtsclwq::GetThreadName().c_str());
+
     wtsclwq::Fiber::YieldToHold();
-    LOG_INFO(logger, "run_in_fiber 222...");
+    LOG_CUSTOM_INFO(logger, "thread: %s run_in_fiber 222...",
+                    wtsclwq::GetThreadName().c_str());
+
     wtsclwq::Fiber::YieldToHold();
-    LOG_INFO(logger, "run_in_fiber 333...");
+    LOG_CUSTOM_INFO(logger, "thread: %s run_in_fiber 333...",
+                    wtsclwq::GetThreadName().c_str());
+
     wtsclwq::Fiber::YieldToHold();
-    LOG_INFO(logger, "run_in_fiber 444...");
+    LOG_CUSTOM_INFO(logger, "thread: %s run_in_fiber 444...",
+                    wtsclwq::GetThreadName().c_str());
 }
 
 void test_fiber() {
     wtsclwq::Fiber::GetCurFiber();
     wtsclwq::Fiber::ptr fiber(new wtsclwq::Fiber(run_in_fiber));
 
-    LOG_INFO(logger, "swap [in] ro run_in_fiber 1");
+    LOG_CUSTOM_INFO(logger, "thread: %s swap [in] ro run_in_fiber 1",
+                    wtsclwq::GetThreadName().c_str());
     fiber->SwapIn();
-    LOG_INFO(logger, "swap [out] from run_in_fiber 1");
+    LOG_CUSTOM_INFO(logger, "thread: %s swap [out] from run_in_fiber 1",
+                    wtsclwq::GetThreadName().c_str());
 
-    LOG_INFO(logger, "swap [in] to run_in_fiber 2");
+    LOG_CUSTOM_INFO(logger, "thread: %s swap [in] to run_in_fiber 2",
+                    wtsclwq::GetThreadName().c_str());
     fiber->SwapIn();
-    LOG_INFO(logger, "swap [out] from run_in_fiber 2");
+    LOG_CUSTOM_INFO(logger, "thread: %s swap [out] from run_in_fiber 2",
+                    wtsclwq::GetThreadName().c_str());
 
-    LOG_INFO(logger, "swap [in] to run_in_fiber 3");
+    LOG_CUSTOM_INFO(logger, "thread: %s swap [in] to run_in_fiber 3",
+                    wtsclwq::GetThreadName().c_str());
     fiber->SwapIn();
-    LOG_INFO(logger, "swap [out] from run_in_fiber 3");
+    LOG_CUSTOM_INFO(logger, "thread: %s swap [out] from run_in_fiber 3",
+                    wtsclwq::GetThreadName().c_str());
 
-    LOG_INFO(logger, "swap [in] to run_in_fiber 4");
+    LOG_CUSTOM_INFO(logger, "thread: %s swap [in] to run_in_fiber 4",
+                    wtsclwq::GetThreadName().c_str());
     fiber->SwapIn();
-    LOG_INFO(logger, "swap [out] from run_in_fiber 4");
+    LOG_CUSTOM_INFO(logger, "thread: %s swap [out] from run_in_fiber 4",
+                    wtsclwq::GetThreadName().c_str());
 }
 
 int count = 0;
@@ -66,20 +80,22 @@ void fun1() {
 }
 
 void test_thread() {
-    LOG_INFO(logger, "thread test begin");
+    LOG_CUSTOM_INFO(logger, "thread: %s test begin",
+                    wtsclwq::GetThreadName().c_str());
 
     std::vector<wtsclwq::Thread::ptr> thrs;
-    for (int i = 0; i != 5; ++i) {
+    for (int i = 0; i != 3; ++i) {
         wtsclwq::Thread::ptr thr(
-            new wtsclwq::Thread(fun1, "name_" + std::to_string(i)));
+            new wtsclwq::Thread(&test_fiber, "name_" + std::to_string(i)));
         thrs.push_back(thr);
     }
 
-    for (int i = 0; i != 5; ++i) {
+    for (int i = 0; i != 3; ++i) {
         thrs[i]->Join();
     }
 
-    LOG_INFO(logger, "thread test end");
+    LOG_CUSTOM_INFO(logger, "thread: %s test end",
+                    wtsclwq::GetThreadName().c_str());
 }
 
 void log1() {
@@ -121,6 +137,6 @@ void test_concurrency_log() {
     LOG_INFO(logger, "teseend");
 }
 auto main() -> int {
-    test_concurrency_log();
+    test_fiber();
     return 0;
 }

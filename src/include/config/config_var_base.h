@@ -1,3 +1,7 @@
+/*
+ * @Description:
+ * @LastEditTime: 2023-03-21 18:04:54
+ */
 #pragma once
 
 #include <memory>
@@ -23,7 +27,7 @@ class ConfigVarBase {
 
     virtual auto ToString() -> std::string = 0;
     virtual auto FromString(std::string val) -> bool = 0;
-    virtual auto GetTypeName() const -> std::string = 0;
+    [[nodiscard]] virtual auto GetTypeName() const -> std::string = 0;
 
   private:
     std::string m_name;
