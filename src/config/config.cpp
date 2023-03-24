@@ -2,7 +2,7 @@
  * @Description:
  * @author: wtsclwq
  * @Date: 2023-03-07 23:33:58
- * @LastEditTime: 2023-03-21 16:31:32
+ * @LastEditTime: 2023-03-24 18:42:37
  */
 #include "../include/config/config.h"
 
@@ -24,8 +24,7 @@ auto Config::LookupBase(const std::string &name) -> ConfigVarBase::ptr {
 }
 
 void Config::LoadFromYaml(const YAML::Node &root) {
-    // ScopedWriteLock lock(GetRWLock());
-
+    ScopedWriteLock lock(GetRWLock());
     std::list<std::pair<std::string, YAML::Node>> all_nodes;
     ListAllMember("", root, all_nodes);
 

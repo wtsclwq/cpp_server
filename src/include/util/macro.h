@@ -2,7 +2,7 @@
  * @Description:
  * @author: wtsclwq
  * @Date: 2023-03-17 23:19:16
- * @LastEditTime: 2023-03-19 16:46:34
+ * @LastEditTime: 2023-03-24 19:14:22
  */
 #pragma once
 
@@ -10,7 +10,6 @@
 #include <string>
 
 #include "thread_util.h"
-
 const int TRACE_SIZE = 100;
 const int SKIP_SIZE = 2;
 #define WTSCLWQ_ASSERT(x, w) /* NOLINT */                       \
