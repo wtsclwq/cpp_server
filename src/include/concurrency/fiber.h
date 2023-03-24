@@ -2,7 +2,7 @@
  * @Description:
  * @author: wtsclwq
  * @Date: 2023-03-17 23:50:28
- * @LastEditTime: 2023-03-23 22:40:33
+ * @LastEditTime: 2023-03-24 15:28:07
  */
 #pragma once
 
@@ -112,6 +112,8 @@ class Fiber : public std::enable_shared_from_this<Fiber> {
      * @description: 将当前协程设置为Hold,切换回主协程
      */
     static void YieldToHold();
+
+    static void YieldToHoldBackScheduler();
 
     /**
      * @description: 获取当前协程ID

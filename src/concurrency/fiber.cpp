@@ -2,7 +2,7 @@
  * @Description:
  * @author: wtsclwq
  * @Date: 2023-03-18 17:44:24
- * @LastEditTime: 2023-03-23 23:23:11
+ * @LastEditTime: 2023-03-24 15:27:28
  */
 #include "../include/concurrency/fiber.h"
 
@@ -112,7 +112,6 @@ void Fiber::Reset(std::function<void()> call_back) {
     m_ctx.uc_stack.ss_sp = m_stack;
     m_ctx.uc_stack.ss_size = m_stack_size;
     makecontext(&m_ctx, &Fiber::MainFunc, 0);
-
     m_state = INIT;
 }
 
@@ -207,6 +206,13 @@ void Fiber::YieldToHold() {
     cur->SwapOut();
 }
 
+void Fiber::YieldToHoldBackScheduler() {
+    Fiber::ptr cur = GetCurFiber();
+    WTSCLWQ_ASSERT(cur->m_state == EXEC, "try to yield a not runing fiber");
+    cur->m_state = HOLD;
+    cur->SwapOutBackScheduler();
+}
+
 auto Fiber::TotalFibers() -> uint64_t { return FiberInfo::s_fiber_count; }
 
 void Fiber::MainFunc() {
@@ -237,8 +243,12 @@ void Fiber::MainFunc() {
     //                只有创建者线程的t_scheduler_fiber才需要swap回t_main_fiber
     // （如果use_caller=false,那么scheduler->m_root_fiber.get()应该是nullptr）
     if (scheduler == nullptr || scheduler->m_root_fiber.get() == cur_raw_ptr) {
+        LOG_CUSTOM_DEBUG(sys_logger, "线程%d协程%lu结束", GetThreadId(),
+                         cur_raw_ptr->m_id);
         cur_raw_ptr->SwapOut();
     } else {
+        LOG_CUSTOM_DEBUG(sys_logger, "线程%d协程%lu结束", GetThreadId(),
+                         cur_raw_ptr->m_id);
         cur_raw_ptr->SwapOutBackScheduler();
     }
     WTSCLWQ_ASSERT(false, "永不到达");

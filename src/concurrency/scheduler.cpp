@@ -1,8 +1,10 @@
 /*
  * @Description:
- * @LastEditTime: 2023-03-23 23:26:57
+ * @LastEditTime: 2023-03-24 16:31:09
  */
 #include "../include/concurrency/scheduler.h"
+
+#include <unistd.h>
 
 #include <cstddef>
 #include <functional>
@@ -72,15 +74,15 @@ auto Scheduler::GetScheduleFiber() -> Fiber* { return t_schedule_fiber; }
 void Scheduler::Start() {
     {
         ScopedLock<MutexType> lock(m_mutex);
-        LOG_CUSTOM_DEBUG(sys_logger, "线程 %d 执行Start()", GetThreadId());
+        LOG_CUSTOM_DEBUG(sys_logger, "创建者线程 %d 执行Start()",
+                         GetThreadId());
         // 不是stoping状态==>运行中
         if (!m_stoping) {
             return;
         }
 
         m_stoping = false;
-        WTSCLWQ_ASSERT(m_threads_vec.empty(), "调度器启动时线程池非空");
-
+        // WTSCLWQ_ASSERT(m_threads_vec.empty(), "调度器启动时线程池非空");
         m_threads_vec.resize(m_thread_count);
         for (size_t i = 0; i != m_thread_count; ++i) {
             // m_threads_vec[i].reset(new Thread(std::bind(&Scheduler::Run,
@@ -94,17 +96,22 @@ void Scheduler::Start() {
             // 再结束构造函数,就可以保证这里能拿到OS分配的线程ID
             m_thread_id_vec.push_back(m_threads_vec[i]->GetId());
         }
+        LOG_CUSTOM_DEBUG(sys_logger, "线程池初始化完成，size ：%lu ",
+                         m_thread_count);
     }
     // 启动创建者线程内的t_scheduler_fiber,上下文交换对象是t_main_fiber
-    if (m_root_fiber) {
-        m_root_fiber->SwapIn();
-    }
-    LOG_CUSTOM_DEBUG(sys_logger, "线程 %d 结束Start()", GetThreadId());
+    /*     if (m_root_fiber) {
+            LOG_CUSTOM_DEBUG(sys_logger,
+                             "创建者线程 %d 的scheduler_fiber执行SwapIn()",
+                             GetThreadId());
+            m_root_fiber->SwapIn();
+        }
+     */
+    LOG_CUSTOM_DEBUG(sys_logger, "创建者线程%d结束Start()", GetThreadId());
 }
 
 void Scheduler::Stop() {  // NOLINT
-    LOG_CUSTOM_DEBUG(sys_logger, "线程 %d:调用Scheduler::Stop()",
-                     GetThreadId());
+    LOG_CUSTOM_DEBUG(sys_logger, "创建者线程%d调用Stop()", GetThreadId());
     m_auto_stop = true;
     // user_caller为true时且thread_num为1时，说明调度器中只有一个线程(创建者线程)
     if (m_root_fiber && m_thread_count == 0 &&
@@ -112,7 +119,7 @@ void Scheduler::Stop() {  // NOLINT
          m_root_fiber->GetState() == Fiber::INIT)) {
         m_stoping = true;
         if (OnStop()) {
-            LOG_CUSTOM_DEBUG(sys_logger, "Thread%d:结束Scheduler::Stop()",
+            LOG_CUSTOM_DEBUG(sys_logger, "创建者线程%d结束Stop()",
                              GetThreadId());
             return;
         }
@@ -133,23 +140,27 @@ void Scheduler::Stop() {  // NOLINT
     for (size_t i = 0; i < m_thread_count; ++i) {
         Tickle();
     }
+
     if (m_root_fiber) {
         Tickle();
         if (!OnStop()) {
             // 如果usr_caller,那么调度器无法停止的时候需要把创建者线程切回调度协程
-            m_root_fiber->SwapInFromScheduler();
+            // 调用Stop()后发现任务队列非空，让scheduer_fiber处理一次
+            LOG_CUSTOM_DEBUG(sys_logger, "创建者线程%d调用Stop()时任务队列非空",
+                             GetThreadId());
+            // m_root_fiber->Reset([this] { Run(); });
+            m_root_fiber->SwapIn();
         }
     }
     for (const auto& thr : m_threads_vec) {
         thr->Join();
     }
     m_threads_vec.clear();
-    LOG_CUSTOM_DEBUG(sys_logger, "线程 %d:结束Scheduler::Stop()",
-                     GetThreadId());
+    LOG_CUSTOM_DEBUG(sys_logger, "创建者线程%d结束Stop()", GetThreadId());
 }
 
 void Scheduler::Run() {  // NOLINT
-    LOG_CUSTOM_INFO(sys_logger, "线程 %d Schdeler::run 开始", GetThreadId());
+    LOG_CUSTOM_INFO(sys_logger, "线程%d开始Run()处理流程", GetThreadId());
     // 所有线程中的Scheduler::Run都是绑定的同一个this
     t_scheduler = this;
     // 分两种情况:
@@ -168,20 +179,19 @@ void Scheduler::Run() {  // NOLINT
     while (true) {
         // 每次轮询时重置task状态
         task.Reset();
-
         bool need_tickle{false};
         {
             ScopedLock<MutexType> lock(m_mutex);
             auto iter{m_task_list.begin()};
             while (iter != m_task_list.end()) {
                 // 任务指定了要再哪条线程执行,但是当前线程不是指定线程==>通知目标线程
-                if ((*iter)->thread_id != -1 &&
-                    (*iter)->thread_id != GetThreadId()) {
+                auto tar_tid = (*iter)->thread_id;
+                if (tar_tid != -1 && tar_tid != GetThreadId()) {
                     ++iter;
                     need_tickle = true;
                     LOG_CUSTOM_DEBUG(sys_logger,
-                                     "线程 %d 取得任务，但任务指定了Thread %d",
-                                     GetThreadId(), task.thread_id);
+                                     "线程%d取得任务，但任务指定了线程%d",
+                                     GetThreadId(), tar_tid);
                     continue;
                 }
                 WTSCLWQ_ASSERT((*iter)->fiber || (*iter)->func, "任务为空");
@@ -190,7 +200,7 @@ void Scheduler::Run() {  // NOLINT
                     (*iter)->fiber->GetState() == Fiber::EXEC) {
                     ++iter;
                     LOG_CUSTOM_DEBUG(sys_logger,
-                                     "线程 %d 取得任务，但任务协程正在运行中",
+                                     "线程%d取得任务，但任务已经在运行中",
                                      GetThreadId());
                     continue;
                 }
@@ -199,7 +209,7 @@ void Scheduler::Run() {  // NOLINT
                 // 线程接到了任务==>活跃线程+1
                 ++m_active_thread_count;
                 m_task_list.erase(iter);
-                LOG_CUSTOM_DEBUG(sys_logger, "线程 %d 取得任务", GetThreadId());
+                LOG_CUSTOM_DEBUG(sys_logger, "线程%d取得任务", GetThreadId());
                 break;
             }
         }
@@ -215,14 +225,13 @@ void Scheduler::Run() {  // NOLINT
         // 经过上面的转变，此时剩下两种情况=>1.协程任务 2.任务内容为空
         // 如果：任务内容非空 且 协程中的任务未完成
         if (task.fiber && !task.fiber->IsFinish()) {
-            LOG_CUSTOM_DEBUG(sys_logger, "线程 %d 开始处理任务", GetThreadId());
             // 任务开始，启动task_fiber
             // 上下文的切换对象是t_schedeler_fiber
             // 但其实非创建者线程的t_schedeler_fiber就是t_main_fiber,只有创建者线程比较特殊
+            LOG_CUSTOM_DEBUG(sys_logger, "线程%d启动协程%lu执行任务主体",
+                             GetThreadId(), task.fiber->GetId());
             task.fiber->SwapInFromScheduler();
             // 任务退出==>活跃线程-1
-            LOG_CUSTOM_DEBUG(sys_logger, "线程 %d 完成任务,协程状态为%d",
-                             GetThreadId(), task.fiber->GetState());
             --m_active_thread_count;
             Fiber::State fiber_state = task.fiber->GetState();
             // 检查协程的退出方式，如果是YiledToReady,那么任务继续放到队列中
@@ -267,6 +276,11 @@ auto Scheduler::OnStop() -> bool {
 
 void Scheduler::OnIdle() {
     LOG_CUSTOM_DEBUG(sys_logger, "线程 %d 执行 OnIdle()", GetThreadId());
+    // 每次从Run回到这里，都会判断是否可以Stop,只有满足了所有的stop条件，才能顺利让idle_fiber成为而term状态
+    // 从而保证如果先执行start,再加入任务时，不会出现所有线程都已经结束，没有人做任务的情况
+    while (!OnStop()) {
+        wtsclwq::Fiber::YieldToHoldBackScheduler();
+    }
 }
 
 void Scheduler::Tickle() { LOG_INFO(sys_logger, "Base schedule Tickle"); }
