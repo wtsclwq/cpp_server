@@ -54,6 +54,12 @@ target("scheduler_test")
     add_deps("log","util","config","concurrency")
     add_packages("boost","yaml-cpp")
 
+target("io_manager_test")
+    set_kind("binary")
+    add_files("test/io_manager_test.cpp")
+    add_deps("log","util","config","concurrency")
+    add_packages("boost","yaml-cpp")
+
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
 --

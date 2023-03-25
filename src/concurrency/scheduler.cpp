@@ -1,6 +1,6 @@
 /*
  * @Description:
- * @LastEditTime: 2023-03-24 16:31:09
+ * @LastEditTime: 2023-03-25 20:22:45
  */
 #include "../include/concurrency/scheduler.h"
 
@@ -66,6 +66,10 @@ Scheduler::~Scheduler() {
 auto Scheduler::GetName() const -> std::string { return m_name; }
 
 auto Scheduler::GetMutex() const -> MutexType& { return m_mutex; }
+
+auto Scheduler::IsHasIdleThread() const -> bool {
+    return m_idle_thread_count > 0;
+}
 
 auto Scheduler::GetThisThreadScheduler() -> Scheduler* { return t_scheduler; }
 
@@ -270,8 +274,7 @@ auto Scheduler::HasIdleThread() const -> bool {
 
 auto Scheduler::OnStop() -> bool {
     ScopedLock<MutexType> lock(m_mutex);
-    return m_auto_stop && m_stoping && m_task_list.empty() &&
-           m_active_thread_count == 0;
+    return m_auto_stop && m_task_list.empty() && m_active_thread_count == 0;
 }
 
 void Scheduler::OnIdle() {

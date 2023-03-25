@@ -1,6 +1,6 @@
 /*
  * @Description:
- * @LastEditTime: 2023-03-25 00:55:50
+ * @LastEditTime: 2023-03-25 20:10:51
  */
 #include "../include/concurrency/io_manager.h"
 
@@ -10,7 +10,9 @@
 
 #include <cerrno>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
+#include <memory>
 
 #include "../include/log/log_manager.h"
 #include "../include/util/macro.h"
@@ -80,6 +82,9 @@ IOManager::~IOManager() {
 
 auto IOManager::AddEvent(int filedsc, EventType new_event,
                          std::function<void()> callback) -> int {
+    LOG_CUSTOM_DEBUG(sys_logger, "add event: %s",
+                     new_event == READ ? "read" : "write");
+
     m_rwlock.ReadLock();
     FdContext::ptr fd_ctx{};
     if (filedsc < m_fd_contexts_vec.size()) {
@@ -105,7 +110,7 @@ auto IOManager::AddEvent(int filedsc, EventType new_event,
     // 如果ctx中的事件为空，说明未注册过，使用ADD模式，否则使用MOD模式
     int op_type = (fd_ctx->events == NONE) ? EPOLL_CTL_ADD : EPOLL_CTL_MOD;
     epoll_event ep_event{};
-    // 旧事件|欲添加事件 设为边缘出发
+    // 旧事件 | 欲添加事件 设为边缘出发
     ep_event.events = EPOLLET | fd_ctx->events | new_event;  // NOLINT
     // 自封装上下文的指针，便于在处理的地方使用该对象中的方法和属性
     ep_event.data.ptr = fd_ctx.get();
@@ -198,7 +203,6 @@ auto IOManager::CancelEvent(int filedsc, EventType event) -> bool {
                          m_epfd, op_type, filedsc, fd_ctx->events, errno);
         return false;
     }
-    fd_ctx->events = new_events;
     fd_ctx->TriggerEvent(event);
     --m_pending_event_count;
     return true;
@@ -248,7 +252,6 @@ auto IOManager::GetCurIOManager() -> IOManager* {
 
 void IOManager::ContextVecResize(size_t size) {
     size_t old_size = m_fd_contexts_vec.size();
-    WTSCLWQ_ASSERT(size = 2 * old_size, "Resize尺寸错误");
     m_fd_contexts_vec.resize(size);
     for (size_t i = old_size; i < m_fd_contexts_vec.size(); ++i) {
         m_fd_contexts_vec[i].reset(new FdContext());
@@ -257,7 +260,99 @@ void IOManager::ContextVecResize(size_t size) {
     }
 }
 
-void IOManager::Tickle() {}
-auto IOManager::OnStop() -> bool { return false; }
-void IOManager::OnIdle() {}
+void IOManager::Tickle() {
+    if (IsHasIdleThread()) {
+        return;
+    }
+    size_t write_size = write(m_tickle_fds[1], "T", 1);
+    WTSCLWQ_ASSERT(write_size == 1, "write() error");
+}
+auto IOManager::OnStop() -> bool {
+    return Scheduler::OnStop() && m_pending_event_count == 0;
+}
+void IOManager::OnIdle() {  // NOLINT
+    const int EVENTS_NUM = 64;
+    auto event_list_ptr =
+        std::make_unique<epoll_event[]>(EVENTS_NUM);  // NOLINT
+    while (true) {
+        if (OnStop()) {
+            LOG_CUSTOM_ERROR(sys_logger, "name = %s idle stoping exit",
+                             GetName().c_str())
+            break;
+        }
+        int nums = 0;
+        while (true) {
+            static const int MAX_TIMEOUT = 5000;
+            static const int MAX_EVENTS = 64;
+            LOG_CUSTOM_INFO(sys_logger, "线程%d begin epoll_wait()....",
+                            GetThreadId());
+            nums = epoll_wait(m_epfd, event_list_ptr.get(), MAX_EVENTS,
+                              MAX_TIMEOUT);
+            LOG_CUSTOM_INFO(sys_logger, "线程%d finish epoll_wait()....",
+                            GetThreadId());
+            if (nums >= 0) {
+                break;
+            }
+            LOG_CUSTOM_ERROR(sys_logger, "epoll_wait() error, errno = %d",
+                             errno);
+        }
+        for (int i = 0; i < nums; ++i) {
+            epoll_event& ep_event = event_list_ptr[i];
+            if (ep_event.data.fd == m_tickle_fds[0]) {
+                auto* dummy = new uint8_t[64];  // NOLINT
+                while (read(m_tickle_fds[0], dummy, sizeof(dummy)) > 0) {
+                }
+                continue;
+            }
+            auto* fd_ctx = static_cast<FdContext*>(ep_event.data.ptr);
+            ScopedLock<FdContext::MutexType> lock(fd_ctx->mutex);
+            // ?存疑该事件的fd出现错误或者失效,直接使用fd_ctx初始化时的事件，因为必定是某一事件触发了才能被wait到
+            if ((ep_event.events & (EPOLLERR | EPOLLHUP)) != NONE) {
+                ep_event.events |= (EPOLLIN | EPOLLOUT) & fd_ctx->events;
+            }
+
+            uint32_t real_evnets = NONE;
+            // 如果有读事件
+            if ((ep_event.events & EPOLLIN) != NONE) {
+                real_evnets |= READ;
+            }
+            // 如果有写事件
+            if ((ep_event.events & EPOLLOUT) != NONE) {
+                real_evnets |= WRITE;
+            }
+            // 如果事件都已经被触发并处理
+            if ((fd_ctx->events & real_evnets) == NONE) {
+                continue;
+            }
+            // real_events是本次要处理的事件，因此需要在ep_events中移除
+            // ?uint32_t left_events = (ep_events->events & ~real_evnets);
+            uint32_t left_events = (fd_ctx->events & ~real_evnets);
+            int op_type = (left_events != NONE) ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
+            ep_event.events = EPOLLET | left_events;
+
+            int flag = epoll_ctl(m_epfd, op_type, fd_ctx->filedsc, &ep_event);
+            if (flag == -1) {
+                LOG_CUSTOM_ERROR(
+                    sys_logger,
+                    "epoll_ctl error, m_epfd = %d, op_type = %d, filedsc "
+                    "= %d, fd_ctx.events = %d, errno = %d",
+                    m_epfd, op_type, fd_ctx->filedsc, fd_ctx->events, errno);
+                continue;
+            }
+            if ((real_evnets & READ) != NONE) {
+                fd_ctx->TriggerEvent(READ);
+                --m_pending_event_count;
+            }
+            if ((real_evnets & WRITE) != NONE) {
+                fd_ctx->TriggerEvent(WRITE);
+                --m_pending_event_count;
+            }
+        }
+        Fiber::ptr cur = Fiber::GetCurFiber();
+        auto* raw_ptr = cur.get();
+        cur.reset();  // 防止换出后无法正常析构
+        raw_ptr->SwapOutBackScheduler();
+    }
+}
+
 }  // namespace wtsclwq

@@ -1,6 +1,6 @@
 /*
  * @Description:
- * @LastEditTime: 2023-03-23 21:14:01
+ * @LastEditTime: 2023-03-25 18:45:13
  */
 #pragma once
 
@@ -47,7 +47,7 @@ class Scheduler {
 
     void SetActiveThreadCount(size_t count);
 
-    [[nodiscard]] auto GetIdleThreadCount() const -> size_t;
+    [[nodiscard]] auto IsHasIdleThread() const -> bool;
 
     void SetIdleThreadCount(size_t count);
 
@@ -109,6 +109,23 @@ class Scheduler {
     template <typename InputIterator>
     void Schedule(InputIterator begin, InputIterator end);
 
+    /**
+     * @description: 调度器需要唤醒其他线程
+     * @return {*}
+     */
+    virtual void Tickle();
+
+    /**
+     * @description: 调度器停止时的回调函数,做一些收尾工作,判断是否可以停止
+     * @return {bool} 是否停止成功
+     */
+    virtual auto OnStop() -> bool;
+
+    /**
+     * @description: 调度器空闲(有空闲线程)时的回调函数
+     */
+    virtual void OnIdle();
+
   private:
     /**
      * @description: 等待分配给线程执行的任务,肯能是fiber或者function
@@ -159,23 +176,6 @@ class Scheduler {
     template <typename Executable>
     auto ScheduleNoLock(Executable &&exec, pid_t thread_id,
                         bool is_priority = false) -> bool;
-
-    /**
-     * @description: 调度器需要唤醒其他线程
-     * @return {*}
-     */
-    virtual void Tickle();
-
-    /**
-     * @description: 调度器停止时的回调函数,做一些收尾工作,判断是否可以停止
-     * @return {bool} 是否停止成功
-     */
-    virtual auto OnStop() -> bool;
-
-    /**
-     * @description: 调度器空闲(有空闲线程)时的回调函数
-     */
-    virtual void OnIdle();
 
     /**
      * @description: 调度器的工作方法

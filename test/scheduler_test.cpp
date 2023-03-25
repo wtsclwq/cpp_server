@@ -1,6 +1,6 @@
 /*
  * @Description:
- * @LastEditTime: 2023-03-24 16:02:57
+ * @LastEditTime: 2023-03-25 14:13:26
  */
 #include "../src/include/concurrency/scheduler.h"
 
@@ -25,6 +25,7 @@ auto main() -> int {
     LOG_CUSTOM_DEBUG(logger, "主线程 %d 测试开始", wtsclwq::GetThreadId());
     wtsclwq::Scheduler scheduler(3, false, "aaaa");
     scheduler.Start();
+    sleep(4);
     scheduler.Schedule(fun);
     scheduler.Stop();
     LOG_CUSTOM_DEBUG(logger, "主线程 %d 测试结束", wtsclwq::GetThreadId());
