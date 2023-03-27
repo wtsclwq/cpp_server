@@ -1,6 +1,6 @@
 /*
  * @Description:
- * @LastEditTime: 2023-03-25 20:10:51
+ * @LastEditTime: 2023-03-27 22:45:41
  */
 #include "../include/concurrency/io_manager.h"
 
@@ -12,10 +12,13 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <functional>
 #include <memory>
+#include <vector>
 
 #include "../include/log/log_manager.h"
 #include "../include/util/macro.h"
+
 namespace wtsclwq {
 static Logger::ptr sys_logger{GET_LOGGER_BY_NAME("system")};
 
@@ -267,35 +270,62 @@ void IOManager::Tickle() {
     size_t write_size = write(m_tickle_fds[1], "T", 1);
     WTSCLWQ_ASSERT(write_size == 1, "write() error");
 }
+
 auto IOManager::OnStop() -> bool {
-    return Scheduler::OnStop() && m_pending_event_count == 0;
+    uint64_t timeout{0};
+    return OnStop(timeout);
 }
+
+auto IOManager::OnStop(uint64_t& timeout) -> bool {
+    timeout = GetNextTimer();
+    return timeout == ~0ULL && m_pending_event_count == 0 &&
+           Scheduler::OnStop();
+}
+
 void IOManager::OnIdle() {  // NOLINT
-    const int EVENTS_NUM = 64;
-    auto event_list_ptr =
-        std::make_unique<epoll_event[]>(EVENTS_NUM);  // NOLINT
+    const int EVENTS_NUM{64};
+    auto event_list_ptr{std::make_unique<epoll_event[]>(EVENTS_NUM)};  // NOLINT
     while (true) {
-        if (OnStop()) {
-            LOG_CUSTOM_ERROR(sys_logger, "name = %s idle stoping exit",
-                             GetName().c_str())
-            break;
+        uint64_t next_timeout{0};
+        if (OnStop(next_timeout)) {
+            if (next_timeout == ~0ULL) {
+                LOG_CUSTOM_ERROR(sys_logger, "name = %s idle stoping exit",
+                                 GetName().c_str())
+                break;
+            }
         }
-        int nums = 0;
+        int nums{0};
         while (true) {
             static const int MAX_TIMEOUT = 5000;
             static const int MAX_EVENTS = 64;
-            LOG_CUSTOM_INFO(sys_logger, "线程%d begin epoll_wait()....",
-                            GetThreadId());
+            if (next_timeout != ~0ULL) {
+                next_timeout = static_cast<int>(next_timeout) > MAX_TIMEOUT
+                                   ? MAX_TIMEOUT
+                                   : next_timeout;
+            } else {
+                next_timeout = MAX_TIMEOUT;
+            }
             nums = epoll_wait(m_epfd, event_list_ptr.get(), MAX_EVENTS,
-                              MAX_TIMEOUT);
-            LOG_CUSTOM_INFO(sys_logger, "线程%d finish epoll_wait()....",
-                            GetThreadId());
+                              static_cast<int>(next_timeout));
             if (nums >= 0) {
                 break;
             }
             LOG_CUSTOM_ERROR(sys_logger, "epoll_wait() error, errno = %d",
                              errno);
         }
+        // 处理定时器
+        // !利用了epoll_wait的副作用：
+        // 1.先利用GetNextTimer获得距离执行下一个定时任务的剩余时间[next_timeout]
+        // 2.epoll_wait等待这段时间[next_timeout]
+        // 3.然后取出所有的超时定时器的回调（正好相等的也算作超时）
+        // 4.把这些回调作为任务用调度器执行
+        std::vector<std::function<void()>> function_vec{};
+        ListExpiredCallbacks(function_vec);
+        if (!function_vec.empty()) {
+            Schedule(function_vec.begin(), function_vec.end());
+            function_vec.clear();
+        }
+
         for (int i = 0; i < nums; ++i) {
             epoll_event& ep_event = event_list_ptr[i];
             if (ep_event.data.fd == m_tickle_fds[0]) {
@@ -354,5 +384,7 @@ void IOManager::OnIdle() {  // NOLINT
         raw_ptr->SwapOutBackScheduler();
     }
 }
+
+void IOManager::OnTimerInsertedFront() { Tickle(); }
 
 }  // namespace wtsclwq

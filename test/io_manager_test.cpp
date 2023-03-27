@@ -1,6 +1,6 @@
 /*
  * @Description:
- * @LastEditTime: 2023-03-25 20:11:42
+ * @LastEditTime: 2023-03-28 01:05:34
  */
 #include "../src/include/concurrency/io_manager.h"
 
@@ -35,7 +35,7 @@ void test_fiber() {
 
         wtsclwq::IOManager::GetCurIOManager()->AddEvent(
             sock, wtsclwq::IOManager::READ, []() { LOG_INFO(logger, "READ"); });
-        
+
         wtsclwq::IOManager::GetCurIOManager()->AddEvent(
             sock, wtsclwq::IOManager::WRITE, [sock]() {
                 LOG_INFO(logger, "WRITE");
@@ -51,7 +51,26 @@ void test1() {
     iom.Schedule(test_fiber);
 }
 
+wtsclwq::Timer::ptr timer{};
+void test_timer() {
+    wtsclwq::IOManager iom(2);
+    timer = iom.AddTimer(
+        1000,
+        []() {
+            static int i = 0;
+            LOG_CUSTOM_INFO(logger, "test_timer i = %d", i);
+            if (++i == 5) {
+                timer->Reset(2000, false);
+            }
+            if (i == 10) {
+                timer->Cancel();
+            }
+        },
+        true);
+}
+
 auto main() -> int {
-    test1();
+    // test1();
+    test_timer();
     return 0;
 }

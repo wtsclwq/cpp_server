@@ -24,6 +24,12 @@ target("concurrency")
     add_deps("log","config","util")
     add_packages("boost","yaml-cpp")
 
+target("timer")
+    set_kind("shared")
+    add_files("src/timer/*.cpp")
+    add_deps("log","config","util","concurrency")
+    add_packages("boost","yaml-cpp")
+
 target("log_test")
     set_kind("binary")
     add_files("test/log_test.cpp")
@@ -45,21 +51,20 @@ target("util_test")
 target("concurrency_test")
     set_kind("binary")
     add_files("test/concurrency_test.cpp")
-    add_deps("log","util","config","concurrency")
+    add_deps("log","util","config","concurrency","timer")
     add_packages("boost","yaml-cpp")
 
 target("scheduler_test")
     set_kind("binary")
     add_files("test/scheduler_test.cpp")
-    add_deps("log","util","config","concurrency")
+    add_deps("log","util","config","concurrency","timer")
     add_packages("boost","yaml-cpp")
 
 target("io_manager_test")
     set_kind("binary")
     add_files("test/io_manager_test.cpp")
-    add_deps("log","util","config","concurrency")
+    add_deps("log","util","config","concurrency","timer")
     add_packages("boost","yaml-cpp")
-
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
 --

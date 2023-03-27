@@ -1,6 +1,6 @@
 /*
  * @Description:
- * @LastEditTime: 2023-03-25 18:45:13
+ * @LastEditTime: 2023-03-27 22:41:46
  */
 #pragma once
 
@@ -216,7 +216,7 @@ void Scheduler::Schedule(InputIterator begin, InputIterator end) {
     {
         ScopedLock<MutexType> lock(m_mutex);
         while (begin != end) {
-            need_tickle = ScheduleNoLock(*begin) || need_tickle;
+            need_tickle = ScheduleNoLock(*begin,-1) || need_tickle;
             ++begin;
         }
     }

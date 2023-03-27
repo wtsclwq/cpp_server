@@ -1,23 +1,26 @@
 /*
  * @Description:
- * @LastEditTime: 2023-03-25 00:45:46
+ * @LastEditTime: 2023-03-27 22:45:07
  */
 #pragma once
 #include <array>
 #include <atomic>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <vector>
 
+#include "../timer/timer.h"
 #include "fiber.h"
 #include "lock.h"
 #include "scheduler.h"
+
 namespace wtsclwq {
 
-class IOManager : public Scheduler {
+class IOManager : public Scheduler, public TimerManager {
   public:
     IOManager(const IOManager &) = delete;
     IOManager(IOManager &&) = delete;
@@ -66,7 +69,9 @@ class IOManager : public Scheduler {
   private:
     void Tickle() override;
     auto OnStop() -> bool override;
+    auto OnStop(uint64_t &timeout) -> bool;
     void OnIdle() override;
+    void OnTimerInsertedFront() override;
     void ContextVecResize(size_t size);
     int m_epfd{0};                                 // epoll实例文件描述符
     int m_tickle_fds[2]{};                         // 通信管道 NOLINT
