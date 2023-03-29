@@ -12,7 +12,7 @@ set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 add_library(concurrency SHARED "")
 set_target_properties(concurrency PROPERTIES OUTPUT_NAME "concurrency")
-set_target_properties(concurrency PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/release")
+set_target_properties(concurrency PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
 target_include_directories(concurrency PRIVATE
     /home/wtsclwq/.xmake/packages/b/boost/1.81.0/f9de8b04e29c494587e2d3e3c7627877/include
     /home/wtsclwq/.xmake/packages/y/yaml-cpp/0.7.0/d02abb58a6cb4e8fab7071bfdba1e372/include
@@ -23,6 +23,16 @@ target_compile_options(concurrency PRIVATE
 )
 set_target_properties(concurrency PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_features(concurrency PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(concurrency PRIVATE $<$<CONFIG:Debug>:-Od>)
+else()
+    target_compile_options(concurrency PRIVATE -O0)
+endif()
+if(MSVC)
+    target_compile_options(concurrency PRIVATE -Zi)
+else()
+    target_compile_options(concurrency PRIVATE -g)
+endif()
 if(MSVC)
     set_property(TARGET concurrency PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -54,7 +64,7 @@ set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 add_library(config SHARED "")
 set_target_properties(config PROPERTIES OUTPUT_NAME "config")
-set_target_properties(config PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/release")
+set_target_properties(config PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
 target_include_directories(config PRIVATE
     /home/wtsclwq/.xmake/packages/b/boost/1.81.0/f9de8b04e29c494587e2d3e3c7627877/include
     /home/wtsclwq/.xmake/packages/y/yaml-cpp/0.7.0/d02abb58a6cb4e8fab7071bfdba1e372/include
@@ -65,6 +75,16 @@ target_compile_options(config PRIVATE
 )
 set_target_properties(config PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_features(config PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(config PRIVATE $<$<CONFIG:Debug>:-Od>)
+else()
+    target_compile_options(config PRIVATE -O0)
+endif()
+if(MSVC)
+    target_compile_options(config PRIVATE -Zi)
+else()
+    target_compile_options(config PRIVATE -g)
+endif()
 if(MSVC)
     set_property(TARGET config PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -96,7 +116,7 @@ set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 add_library(io SHARED "")
 set_target_properties(io PROPERTIES OUTPUT_NAME "io")
-set_target_properties(io PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/release")
+set_target_properties(io PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
 target_include_directories(io PRIVATE
     /home/wtsclwq/.xmake/packages/b/boost/1.81.0/f9de8b04e29c494587e2d3e3c7627877/include
     /home/wtsclwq/.xmake/packages/y/yaml-cpp/0.7.0/d02abb58a6cb4e8fab7071bfdba1e372/include
@@ -107,6 +127,16 @@ target_compile_options(io PRIVATE
 )
 set_target_properties(io PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_features(io PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(io PRIVATE $<$<CONFIG:Debug>:-Od>)
+else()
+    target_compile_options(io PRIVATE -O0)
+endif()
+if(MSVC)
+    target_compile_options(io PRIVATE -Zi)
+else()
+    target_compile_options(io PRIVATE -g)
+endif()
 if(MSVC)
     set_property(TARGET io PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -139,7 +169,7 @@ set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 add_executable(io_manager_test "")
 set_target_properties(io_manager_test PROPERTIES OUTPUT_NAME "io_manager_test")
-set_target_properties(io_manager_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/release")
+set_target_properties(io_manager_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
 add_dependencies(io_manager_test log util config concurrency timer io)
 target_include_directories(io_manager_test PRIVATE
     /home/wtsclwq/.xmake/packages/b/boost/1.81.0/f9de8b04e29c494587e2d3e3c7627877/include
@@ -151,6 +181,16 @@ target_compile_options(io_manager_test PRIVATE
 )
 set_target_properties(io_manager_test PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_features(io_manager_test PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(io_manager_test PRIVATE $<$<CONFIG:Debug>:-Od>)
+else()
+    target_compile_options(io_manager_test PRIVATE -O0)
+endif()
+if(MSVC)
+    target_compile_options(io_manager_test PRIVATE -Zi)
+else()
+    target_compile_options(io_manager_test PRIVATE -g)
+endif()
 if(MSVC)
     set_property(TARGET io_manager_test PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -173,7 +213,7 @@ target_link_libraries(io_manager_test PRIVATE
 target_link_directories(io_manager_test PRIVATE
     /home/wtsclwq/.xmake/packages/b/boost/1.81.0/f9de8b04e29c494587e2d3e3c7627877/lib
     /home/wtsclwq/.xmake/packages/y/yaml-cpp/0.7.0/d02abb58a6cb4e8fab7071bfdba1e372/lib
-    build/linux/x86_64/release
+    build/linux/x86_64/debug
 )
 target_link_options(io_manager_test PRIVATE
     -m64
@@ -187,7 +227,7 @@ set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 add_library(log SHARED "")
 set_target_properties(log PROPERTIES OUTPUT_NAME "log")
-set_target_properties(log PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/release")
+set_target_properties(log PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
 target_include_directories(log PRIVATE
     /home/wtsclwq/.xmake/packages/b/boost/1.81.0/f9de8b04e29c494587e2d3e3c7627877/include
     /home/wtsclwq/.xmake/packages/y/yaml-cpp/0.7.0/d02abb58a6cb4e8fab7071bfdba1e372/include
@@ -198,6 +238,16 @@ target_compile_options(log PRIVATE
 )
 set_target_properties(log PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_features(log PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(log PRIVATE $<$<CONFIG:Debug>:-Od>)
+else()
+    target_compile_options(log PRIVATE -O0)
+endif()
+if(MSVC)
+    target_compile_options(log PRIVATE -Zi)
+else()
+    target_compile_options(log PRIVATE -g)
+endif()
 if(MSVC)
     set_property(TARGET log PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -230,9 +280,59 @@ target_sources(log PRIVATE
 # target
 set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+add_library(socket SHARED "")
+set_target_properties(socket PROPERTIES OUTPUT_NAME "socket")
+set_target_properties(socket PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
+target_include_directories(socket PRIVATE
+    /home/wtsclwq/.xmake/packages/b/boost/1.81.0/f9de8b04e29c494587e2d3e3c7627877/include
+    /home/wtsclwq/.xmake/packages/y/yaml-cpp/0.7.0/d02abb58a6cb4e8fab7071bfdba1e372/include
+)
+target_compile_options(socket PRIVATE
+    $<$<COMPILE_LANGUAGE:C>:-m64>
+    $<$<COMPILE_LANGUAGE:CXX>:-m64>
+)
+set_target_properties(socket PROPERTIES CXX_EXTENSIONS OFF)
+target_compile_features(socket PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(socket PRIVATE $<$<CONFIG:Debug>:-Od>)
+else()
+    target_compile_options(socket PRIVATE -O0)
+endif()
+if(MSVC)
+    target_compile_options(socket PRIVATE -Zi)
+else()
+    target_compile_options(socket PRIVATE -g)
+endif()
+if(MSVC)
+    set_property(TARGET socket PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+target_link_libraries(socket PRIVATE
+    boost_atomic-mt
+    boost_filesystem-mt
+    bz2
+    z
+    yaml-cpp
+    pthread
+    dl
+)
+target_link_directories(socket PRIVATE
+    /home/wtsclwq/.xmake/packages/b/boost/1.81.0/f9de8b04e29c494587e2d3e3c7627877/lib
+    /home/wtsclwq/.xmake/packages/y/yaml-cpp/0.7.0/d02abb58a6cb4e8fab7071bfdba1e372/lib
+)
+target_link_options(socket PRIVATE
+    -m64
+)
+target_sources(socket PRIVATE
+    src/socket/socket.cpp
+)
+
+# target
+set(CMAKE_C_COMPILER "/usr/bin/clang")
+set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 add_library(timer SHARED "")
 set_target_properties(timer PROPERTIES OUTPUT_NAME "timer")
-set_target_properties(timer PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/release")
+set_target_properties(timer PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
 target_include_directories(timer PRIVATE
     /home/wtsclwq/.xmake/packages/b/boost/1.81.0/f9de8b04e29c494587e2d3e3c7627877/include
     /home/wtsclwq/.xmake/packages/y/yaml-cpp/0.7.0/d02abb58a6cb4e8fab7071bfdba1e372/include
@@ -243,6 +343,16 @@ target_compile_options(timer PRIVATE
 )
 set_target_properties(timer PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_features(timer PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(timer PRIVATE $<$<CONFIG:Debug>:-Od>)
+else()
+    target_compile_options(timer PRIVATE -O0)
+endif()
+if(MSVC)
+    target_compile_options(timer PRIVATE -Zi)
+else()
+    target_compile_options(timer PRIVATE -g)
+endif()
 if(MSVC)
     set_property(TARGET timer PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -272,7 +382,7 @@ set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 add_library(util SHARED "")
 set_target_properties(util PROPERTIES OUTPUT_NAME "util")
-set_target_properties(util PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/release")
+set_target_properties(util PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
 target_include_directories(util PRIVATE
     /home/wtsclwq/.xmake/packages/b/boost/1.81.0/f9de8b04e29c494587e2d3e3c7627877/include
     /home/wtsclwq/.xmake/packages/y/yaml-cpp/0.7.0/d02abb58a6cb4e8fab7071bfdba1e372/include
@@ -283,6 +393,16 @@ target_compile_options(util PRIVATE
 )
 set_target_properties(util PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_features(util PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(util PRIVATE $<$<CONFIG:Debug>:-Od>)
+else()
+    target_compile_options(util PRIVATE -O0)
+endif()
+if(MSVC)
+    target_compile_options(util PRIVATE -Zi)
+else()
+    target_compile_options(util PRIVATE -g)
+endif()
 if(MSVC)
     set_property(TARGET util PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")

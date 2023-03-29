@@ -32,6 +32,10 @@ target("io")
     set_kind("shared")
     add_files("src/io/*.cpp")
 
+target("socket")
+    set_kind("shared")
+    add_files("src/socket/*.cpp")
+
 target("io_manager_test")
     set_kind("binary")
     add_files("test/io_manager_test.cpp")

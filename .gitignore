@@ -1,9 +1,12 @@
 # Xmake cache
 .xmake/
 build/
-.idea/
+
 # MacOS Cache
 .DS_Store
 
 # vscode
 .vscode
+
+# clion
+.idea/

@@ -1,9 +1,3 @@
-/*
- * @Author: mikey.zhaopeng
- * @Date: 2023-03-Fr 04:47:46
- * @Last Modified by:   mikey.zhaopeng
- * @Last Modified time: 2023-03-Fr 04:47:46
- */
 #pragma once
 
 #include <list>
