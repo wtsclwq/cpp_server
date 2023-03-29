@@ -5,7 +5,7 @@
 # project
 cmake_minimum_required(VERSION 3.15.0)
 cmake_policy(SET CMP0091 NEW)
-project(concurrency LANGUAGES CXX C)
+project(cpp-server LANGUAGES CXX C)
 
 # target
 set(CMAKE_C_COMPILER "/usr/bin/clang")
@@ -280,7 +280,7 @@ target_sources(log PRIVATE
 # target
 set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
-add_library(socket SHARED "")
+add_library(socket SHARED "" src/socket/address.cpp src/include/socket/address.h src/socket/ip_address.cpp src/include/socket/ip_address.h src/socket/ipv4_address.cpp src/include/socket/ipv4_address.h src/socket/ipv6_address.cpp src/include/socket/ipv6_address.h src/socket/unix_address.cpp src/include/socket/unix_address.h src/socket/unknow_address.cpp src/include/socket/unknow_address.h)
 set_target_properties(socket PROPERTIES OUTPUT_NAME "socket")
 set_target_properties(socket PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
 target_include_directories(socket PRIVATE

@@ -4,4 +4,6 @@
 
 #include "../include/socket/socket.h"
 
-namespace wtsclwq {}  // namespace wtsclwq
+#include "../include/log/log_manager.h"
+namespace wtsclwq {
+}  // namespace wtsclwq
