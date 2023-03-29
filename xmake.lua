@@ -1,7 +1,8 @@
-add_rules("mode.debug")
+set_project("cpp-server")
+add_rules("mode.release", "mode.debug")
 add_requires("boost","yaml-cpp")
 add_packages("boost","yaml-cpp")
-set_languages("c++17")
+set_languages("cxx17")
 set_toolchains("clang")
 
 target("util")
