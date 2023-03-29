@@ -15,9 +15,9 @@
 #include <utility>
 #include <vector>
 
-#include "fiber.h"
-#include "lock.h"
-#include "thread.h"
+#include "../concurrency/fiber.h"
+#include "../concurrency/lock.h"
+#include "../concurrency/thread.h"
 namespace wtsclwq {
 class Scheduler {
   public:

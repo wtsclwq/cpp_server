@@ -81,8 +81,7 @@ void LogFormatter::Init() {
                 break;
             // 处理占位符
             case CREATE_STATUS:
-                assert(("format_item_map没有被正确的初始化",  // NOLINT
-                        !format_item_map.empty()));
+                assert(!format_item_map.empty());
                 auto iter = format_item_map.find(m_pattern[i]);
                 if (iter == format_item_map.end()) {
                     m_items.push_back(

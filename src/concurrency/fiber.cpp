@@ -1,8 +1,10 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "EmptyDeclOrStmt"
 /*
  * @Description:
  * @author: wtsclwq
  * @Date: 2023-03-18 17:44:24
- * @LastEditTime: 2023-03-24 15:27:28
+ * @LastEditTime: 2023-03-29 17:39:13
  */
 #include "../include/concurrency/fiber.h"
 
@@ -16,8 +18,8 @@
 #include <memory>
 #include <sstream>
 
-#include "../include/concurrency/scheduler.h"
 #include "../include/config/config.h"
+#include "../include/io/scheduler.h"
 #include "../include/log/log_manager.h"
 #include "../include/util/macro.h"
 
@@ -25,7 +27,7 @@ namespace wtsclwq {
 
 static Logger::ptr sys_logger = GET_LOGGER_BY_NAME("system");
 
-namespace FiberInfo {
+namespace fiber_info {
 static std::atomic<uint64_t> s_fiber_id{0};
 static std::atomic<uint64_t> s_fiber_count{0};
 
@@ -34,7 +36,7 @@ static thread_local Fiber::ptr t_main_fiber{nullptr};
 
 static ConfigVar<uint32_t>::ptr g_fiber_static_size{Config::Lookup<uint32_t>(
     "fiber.stack_size", FIBER_STACK_SIZE, "fiber stack size")};
-}  // namespace FiberInfo
+}  // namespace fiber_info
 
 class MallocStackAllocator {
   public:
@@ -48,24 +50,24 @@ class MallocStackAllocator {
 using StackAlloctor = MallocStackAllocator;
 
 Fiber::Fiber()
-    : m_id(FiberInfo::s_fiber_id++), m_stack_size(0), m_stack(nullptr),
+    : m_id(fiber_info::s_fiber_id++), m_stack_size(0), m_stack(nullptr),
       m_state(EXEC), m_call_back(nullptr) {
     SetCurFiber(this);
     int flag = getcontext(&m_ctx);
     WTSCLWQ_ASSERT(flag == 0, "getcontext error");
-    ++FiberInfo::s_fiber_count;
+    ++fiber_info::s_fiber_count;
 
     LOG_CUSTOM_DEBUG(sys_logger, "协程 %lu 创建成功", m_id);
 }
 
 Fiber::Fiber(std::function<void()> call_back, size_t stack_size)
-    : m_id(FiberInfo::s_fiber_id++),
+    : m_id(fiber_info::s_fiber_id++),
       m_stack_size(stack_size != 0
                        ? stack_size
-                       : FiberInfo::g_fiber_static_size->GetValue()),
+                       : fiber_info::g_fiber_static_size->GetValue()),
       m_stack(StackAlloctor::Alloc(m_stack_size)), m_state(INIT),
       m_call_back(std::move(call_back)) {
-    ++FiberInfo::s_fiber_count;
+    ++fiber_info::s_fiber_count;
     // 获取栈上下文填充到 m_ctx 中
     int flag = getcontext(&m_ctx);
     WTSCLWQ_ASSERT(flag == 0, "getcontext error");
@@ -78,7 +80,7 @@ Fiber::Fiber(std::function<void()> call_back, size_t stack_size)
 }
 
 Fiber::~Fiber() {
-    --FiberInfo::s_fiber_count;
+    --fiber_info::s_fiber_count;
     if (m_stack != nullptr) {  // 子协程有自己的栈空间
         WTSCLWQ_ASSERT(m_state == TERM || m_state == INIT || m_state == EXCEPT,
                        "try to deconstract a activ fiber");
@@ -90,7 +92,7 @@ Fiber::~Fiber() {
         WTSCLWQ_ASSERT(!m_call_back, "call back func is null");
         // 主协程一定出处于exec状态
         WTSCLWQ_ASSERT(m_state == EXEC, "fiber is not exec");
-        Fiber *cur = FiberInfo::t_cur_fiber;
+        Fiber *cur = fiber_info::t_cur_fiber;
         // 如果当前运行中的协程是主协程
         if (cur == this) {
             SetCurFiber(nullptr);
@@ -116,14 +118,14 @@ void Fiber::Reset(std::function<void()> call_back) {
 }
 
 void Fiber::SwapIn() {
-    WTSCLWQ_ASSERT(FiberInfo::t_main_fiber, "当前线程不存在主协程");
+    WTSCLWQ_ASSERT(fiber_info::t_main_fiber, "当前线程不存在主协程");
     WTSCLWQ_ASSERT(m_state == INIT || m_state == READY || m_state == HOLD,
                    "只有协程是等待执行的状态才能SwapIn()");
     SetCurFiber(this);
     // 协程状态改为EXEC
     m_state = EXEC;
     // 交换上下文
-    int flag = swapcontext(&(FiberInfo::t_main_fiber->m_ctx), &m_ctx);
+    int flag = swapcontext(&(fiber_info::t_main_fiber->m_ctx), &m_ctx);
     WTSCLWQ_ASSERT(flag == 0, "swapcontext error");
 }
 
@@ -140,10 +142,10 @@ void Fiber::SwapInFromScheduler() {
 }
 
 void Fiber::SwapOut() {
-    WTSCLWQ_ASSERT(FiberInfo::t_main_fiber, "当前线程不存在主协程");
+    WTSCLWQ_ASSERT(fiber_info::t_main_fiber, "当前线程不存在主协程");
     WTSCLWQ_ASSERT(m_stack != nullptr, "协程栈指针为null")
-    SetCurFiber(FiberInfo::t_main_fiber.get());
-    int flag = swapcontext(&m_ctx, &(FiberInfo::t_main_fiber->m_ctx));
+    SetCurFiber(fiber_info::t_main_fiber.get());
+    int flag = swapcontext(&m_ctx, &(fiber_info::t_main_fiber->m_ctx));
     WTSCLWQ_ASSERT(flag == 0, "swapcontext error");
 }
 
@@ -169,25 +171,25 @@ auto Fiber::IsFinish() const noexcept -> bool {
 /* ************************************************************** */
 /* ************************************************************** */
 
-void Fiber::SetCurFiber(Fiber *fiber) { FiberInfo::t_cur_fiber = fiber; }
+void Fiber::SetCurFiber(Fiber *fiber) { fiber_info::t_cur_fiber = fiber; }
 
 auto Fiber::GetCurFiber() -> Fiber::ptr {
-    if (FiberInfo::t_cur_fiber != nullptr) {
-        return FiberInfo::t_cur_fiber->shared_from_this();
+    if (fiber_info::t_cur_fiber != nullptr) {
+        return fiber_info::t_cur_fiber->shared_from_this();
     }
     // 如果没有cur协程，说明当前线程还没有创建过协程
     // 这里new Fiber会调用无参构造，其中会SetCurFiber(this)
     // 设置主协程为第一个创建的协程
-    FiberInfo::t_main_fiber.reset(new Fiber());
+    fiber_info::t_main_fiber.reset(new Fiber());
     //? return main_fiber;
     // 效果应该相同？因为main_fiber持有的应该就是t_cur_fiber指向的对象
-    return FiberInfo::t_cur_fiber->shared_from_this();
+    return fiber_info::t_cur_fiber->shared_from_this();
 }
 
 auto Fiber::GetCurFiberId() -> uint64_t {
     // 如果有cur协程（创建过协程）
-    if (FiberInfo::t_cur_fiber != nullptr) {
-        return FiberInfo::t_cur_fiber->GetId();
+    if (fiber_info::t_cur_fiber != nullptr) {
+        return fiber_info::t_cur_fiber->GetId();
     }
     // 如果没有创建过协程，默认为主协程（0号）
     return 0;
@@ -213,9 +215,10 @@ void Fiber::YieldToHoldBackScheduler() {
     cur->SwapOutBackScheduler();
 }
 
-auto Fiber::TotalFibers() -> uint64_t { return FiberInfo::s_fiber_count; }
+auto Fiber::TotalFibers() -> uint64_t { return fiber_info::s_fiber_count; }
 
 void Fiber::MainFunc() {
+    LOG_DEBUG(sys_logger, "Fiber MainFunc begin");
     Fiber::ptr cur_smart_ptr = GetCurFiber();
     WTSCLWQ_ASSERT(cur_smart_ptr != nullptr, "current fiber is nullptr");
     try {
@@ -245,12 +248,15 @@ void Fiber::MainFunc() {
     if (scheduler == nullptr || scheduler->m_root_fiber.get() == cur_raw_ptr) {
         LOG_CUSTOM_DEBUG(sys_logger, "线程%d协程%lu结束", GetThreadId(),
                          cur_raw_ptr->m_id);
+        LOG_DEBUG(sys_logger, "Fiber MainFunc end");
         cur_raw_ptr->SwapOut();
     } else {
         LOG_CUSTOM_DEBUG(sys_logger, "线程%d协程%lu结束", GetThreadId(),
                          cur_raw_ptr->m_id);
+        LOG_DEBUG(sys_logger, "Fiber MainFunc end");
         cur_raw_ptr->SwapOutBackScheduler();
     }
     WTSCLWQ_ASSERT(false, "永不到达");
 }
 }  // namespace wtsclwq
+#pragma clang diagnostic pop

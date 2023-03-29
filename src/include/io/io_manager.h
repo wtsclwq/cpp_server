@@ -1,6 +1,6 @@
 /*
  * @Description:
- * @LastEditTime: 2023-03-27 22:45:07
+ * @LastEditTime: 2023-03-28 16:16:24
  */
 #pragma once
 #include <array>
@@ -13,12 +13,13 @@
 #include <mutex>
 #include <vector>
 
+#include "../concurrency/fiber.h"
+#include "../concurrency/lock.h"
 #include "../timer/timer.h"
-#include "fiber.h"
-#include "lock.h"
 #include "scheduler.h"
 
 namespace wtsclwq {
+enum EventType { NONE = 0x0, READ = 0x1, WRITE = 0x4 };
 
 class IOManager : public Scheduler, public TimerManager {
   public:
@@ -28,7 +29,6 @@ class IOManager : public Scheduler, public TimerManager {
     auto operator=(IOManager &&) -> IOManager & = delete;
 
     using ptr = std::shared_ptr<IOManager>;
-    enum EventType { NONE = 0x0, READ = 0x1, WRITE = 0x4 };
 
   private:
     struct FdContext {
@@ -60,9 +60,9 @@ class IOManager : public Scheduler, public TimerManager {
      */
     auto AddEvent(int filedsc, EventType new_event,
                   std::function<void()> callback = nullptr) -> int;
-    auto DelEvent(int filedsc, EventType event) -> bool;
-    auto CancelEvent(int filedsc, EventType event) -> bool;
-    auto CancleAll(int filedsc) -> bool;
+    [[maybe_unused]] auto DelEvent(int filedesc, EventType event) -> bool;
+    auto CancelEvent(int filedesc, EventType event) -> bool;
+    auto CancleAll(int filedesc) -> bool;
 
     static auto GetCurIOManager() -> IOManager *;
 

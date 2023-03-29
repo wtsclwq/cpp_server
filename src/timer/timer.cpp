@@ -1,6 +1,6 @@
 /*
  * @Description:
- * @LastEditTime: 2023-03-28 01:00:14
+ * @LastEditTime: 2023-03-29 16:56:51
  */
 #include "../include/timer/timer.h"
 
@@ -52,7 +52,7 @@ auto Timer::Cancel() -> bool {
     return false;
 }
 
-auto Timer::Refresh() -> bool {
+[[maybe_unused]] auto Timer::Refresh() -> bool {
     ScopedWriteLock lock(m_manager->m_rw_lock);
     if (!m_callback) {
         return false;
@@ -83,7 +83,7 @@ auto Timer::Reset(uint64_t msecend, bool from_now) -> bool {
     }
     // 为什么移除在插入，因为set的比较逻辑是timer的m_ms，如果直接修改了m_ms会影响数据结构的排序正确性
     m_manager->m_timers_set.erase(iter);
-    uint64_t start = 0;
+    uint64_t start;
     if (from_now) {
         start = wtsclwq::GetCurrentMS();
     } else {
@@ -124,10 +124,10 @@ static void OnTimer(const std::weak_ptr<void> &weak_cond,
     }
 }
 
-auto TimerManager::AddCondictionTimer(uint64_t msecend,
-                                      const std::function<void()> &callback,
-                                      const std::weak_ptr<void> &weak_cond,
-                                      bool is_recur) -> Timer::ptr {
+auto TimerManager::AddConditionTimer(uint64_t msecend,
+                                     const std::function<void()> &callback,
+                                     const std::weak_ptr<void> &weak_cond,
+                                     bool is_recur) -> Timer::ptr {
     return AddTimer(
         msecend, [weak_cond, callback] { return OnTimer(weak_cond, callback); },
         is_recur);
@@ -146,7 +146,7 @@ auto TimerManager::GetNextTimer() -> uint64_t {
     return next->m_next - now_ms;
 }
 
-auto TimerManager::HasTimer() -> bool {
+[[maybe_unused]] auto TimerManager::HasTimer() -> bool {
     ScopedReadLock lock(m_rw_lock);
     return !m_timers_set.empty();
 }

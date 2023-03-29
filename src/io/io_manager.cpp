@@ -1,8 +1,10 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "EmptyDeclOrStmt"
 /*
  * @Description:
- * @LastEditTime: 2023-03-27 22:45:41
+ * @LastEditTime: 2023-03-28 21:18:52
  */
-#include "../include/concurrency/io_manager.h"
+#include "../include/io/io_manager.h"
 
 #include <fcntl.h>
 #include <sys/epoll.h>
@@ -11,7 +13,6 @@
 #include <cerrno>
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -22,7 +23,7 @@
 namespace wtsclwq {
 static Logger::ptr sys_logger{GET_LOGGER_BY_NAME("system")};
 
-auto IOManager::FdContext::GetEventHandler(IOManager::EventType event)
+auto IOManager::FdContext::GetEventHandler(EventType event)
     -> IOManager::FdContext::EventHandler& {
     switch (event) {
         case READ:
@@ -31,6 +32,7 @@ auto IOManager::FdContext::GetEventHandler(IOManager::EventType event)
             return this->write_handler;
         default:
             WTSCLWQ_ASSERT(false, "GetEventHandler error");
+            return read_handler;
     }
 }
 
@@ -56,8 +58,8 @@ IOManager::IOManager(size_t thread_num, bool use_caller, std::string name)
     : Scheduler(thread_num, use_caller, std::move(name)),
       m_epfd(epoll_create1(EPOLL_CLOEXEC)) {
     WTSCLWQ_ASSERT(m_epfd > 0, "epoll_create() error");
-    int flag = 0;
-    flag = pipe2(m_tickle_fds, O_CLOEXEC);  // NOLINT
+    int flag;
+    flag = pipe2(m_tickle_fds, O_CLOEXEC);
     WTSCLWQ_ASSERT(flag != -1, "pipe2() error");
 
     epoll_event ep_event{};
@@ -71,8 +73,8 @@ IOManager::IOManager(size_t thread_num, bool use_caller, std::string name)
     flag = epoll_ctl(m_epfd, EPOLL_CTL_ADD, m_tickle_fds[0], &ep_event);
     WTSCLWQ_ASSERT(flag != -1, "epoll_ctl() error");
 
-    const size_t CONTEXT_VEC_SIZE = 64;
-    ContextVecResize(CONTEXT_VEC_SIZE);
+    const size_t context_vec_size = 64;
+    ContextVecResize(context_vec_size);
 
     this->Start();
 }
@@ -120,7 +122,7 @@ auto IOManager::AddEvent(int filedsc, EventType new_event,
     int flag = epoll_ctl(m_epfd, op_type, filedsc, &ep_event);
     if (flag == -1) {
         LOG_CUSTOM_ERROR(sys_logger,
-                         "epoll_ctl error, m_epfd = %d, op_type = %d, filedsc "
+                         "epoll_ctl error, m_epfd = %d, op_type = %d, filedesc "
                          "= %d, fd_ctx.events = %d, errno = %d",
                          m_epfd, op_type, filedsc, fd_ctx->events, errno);
         return -1;
@@ -143,12 +145,13 @@ auto IOManager::AddEvent(int filedsc, EventType new_event,
     }
     return 0;
 }
-auto IOManager::DelEvent(int filedsc, EventType event) -> bool {
+
+[[maybe_unused]] auto IOManager::DelEvent(int filedesc, EventType event) -> bool {
     m_rwlock.ReadLock();
-    if (filedsc >= m_fd_contexts_vec.size()) {
+    if (filedesc >= m_fd_contexts_vec.size()) {
         return false;
     }
-    FdContext::ptr fd_ctx{m_fd_contexts_vec[filedsc]};
+    FdContext::ptr fd_ctx{m_fd_contexts_vec[filedesc]};
     m_rwlock.ReadUnlock();
 
     ScopedLock<FdContext::MutexType> fd_lock(fd_ctx->mutex);
@@ -164,12 +167,12 @@ auto IOManager::DelEvent(int filedsc, EventType event) -> bool {
     epoll_event ep_event{};
     ep_event.events = EPOLLET | new_events;  // NOLINT
     ep_event.data.ptr = fd_ctx.get();
-    int flag = epoll_ctl(m_epfd, op_type, filedsc, &ep_event);
+    int flag = epoll_ctl(m_epfd, op_type, filedesc, &ep_event);
     if (flag == -1) {
         LOG_CUSTOM_ERROR(sys_logger,
                          "epoll_ctl error, m_epfd = %d, op_type = %d, filedsc "
                          "= %d, fd_ctx.events = %d, errno = %d",
-                         m_epfd, op_type, filedsc, fd_ctx->events, errno);
+                         m_epfd, op_type, filedesc, fd_ctx->events, errno);
         return false;
     }
     --m_pending_event_count;
@@ -178,12 +181,13 @@ auto IOManager::DelEvent(int filedsc, EventType event) -> bool {
     fd_ctx->ResetEventHandler(event_handler);
     return true;
 }
-auto IOManager::CancelEvent(int filedsc, EventType event) -> bool {
+
+auto IOManager::CancelEvent(int filedesc, EventType event) -> bool {
     m_rwlock.ReadLock();
-    if (filedsc >= m_fd_contexts_vec.size()) {
+    if (filedesc >= m_fd_contexts_vec.size()) {
         return false;
     }
-    FdContext::ptr fd_ctx{m_fd_contexts_vec[filedsc]};
+    FdContext::ptr fd_ctx{m_fd_contexts_vec[filedesc]};
     m_rwlock.ReadUnlock();
 
     ScopedLock<FdContext::MutexType> fd_lock(fd_ctx->mutex);
@@ -198,24 +202,25 @@ auto IOManager::CancelEvent(int filedsc, EventType event) -> bool {
     epoll_event ep_event{};
     ep_event.events = EPOLLIN | new_events;  // NOLINT
     ep_event.data.ptr = fd_ctx.get();
-    int flag = epoll_ctl(m_epfd, op_type, filedsc, &ep_event);
+    int flag = epoll_ctl(m_epfd, op_type, filedesc, &ep_event);
     if (flag == -1) {
         LOG_CUSTOM_ERROR(sys_logger,
                          "epoll_ctl error, m_epfd = %d, op_type = %d, filedsc "
                          "= %d, fd_ctx.events = %d, errno = %d",
-                         m_epfd, op_type, filedsc, fd_ctx->events, errno);
+                         m_epfd, op_type, filedesc, fd_ctx->events, errno);
         return false;
     }
     fd_ctx->TriggerEvent(event);
     --m_pending_event_count;
     return true;
 }
-auto IOManager::CancleAll(int filedsc) -> bool {
+
+auto IOManager::CancleAll(int filedesc) -> bool {
     m_rwlock.ReadLock();
-    if (filedsc >= m_fd_contexts_vec.size()) {
+    if (filedesc >= m_fd_contexts_vec.size()) {
         return false;
     }
-    FdContext::ptr fd_ctx{m_fd_contexts_vec[filedsc]};
+    FdContext::ptr fd_ctx{m_fd_contexts_vec[filedesc]};
     m_rwlock.ReadUnlock();
 
     ScopedLock<FdContext::MutexType> fd_lock(fd_ctx->mutex);
@@ -229,12 +234,12 @@ auto IOManager::CancleAll(int filedsc) -> bool {
     ep_event.events = 0;  // NOLINT
     ep_event.data.ptr = fd_ctx.get();
 
-    int flag = epoll_ctl(m_epfd, op_type, filedsc, &ep_event);
+    int flag = epoll_ctl(m_epfd, op_type, filedesc, &ep_event);
     if (flag == -1) {
         LOG_CUSTOM_ERROR(sys_logger,
                          "epoll_ctl error, m_epfd = %d, op_type = %d, filedsc "
                          "= %d, fd_ctx.events = %d, errno = %d",
-                         m_epfd, op_type, filedsc, fd_ctx->events, errno);
+                         m_epfd, op_type, filedesc, fd_ctx->events, errno);
         return false;
     }
     if ((fd_ctx->events & READ) != NONE) {
@@ -283,8 +288,8 @@ auto IOManager::OnStop(uint64_t& timeout) -> bool {
 }
 
 void IOManager::OnIdle() {  // NOLINT
-    const int EVENTS_NUM{64};
-    auto event_list_ptr{std::make_unique<epoll_event[]>(EVENTS_NUM)};  // NOLINT
+    const int events_num{64};
+    auto event_list_ptr{std::make_unique<epoll_event[]>(events_num)};  // NOLINT
     while (true) {
         uint64_t next_timeout{0};
         if (OnStop(next_timeout)) {
@@ -294,18 +299,18 @@ void IOManager::OnIdle() {  // NOLINT
                 break;
             }
         }
-        int nums{0};
+        int nums;
         while (true) {
-            static const int MAX_TIMEOUT = 5000;
-            static const int MAX_EVENTS = 64;
+            static const int max_timeout = 5000;
+            static const int max_events = 64;
             if (next_timeout != ~0ULL) {
-                next_timeout = static_cast<int>(next_timeout) > MAX_TIMEOUT
-                                   ? MAX_TIMEOUT
+                next_timeout = static_cast<int>(next_timeout) > max_timeout
+                                   ? max_timeout
                                    : next_timeout;
             } else {
-                next_timeout = MAX_TIMEOUT;
+                next_timeout = max_timeout;
             }
-            nums = epoll_wait(m_epfd, event_list_ptr.get(), MAX_EVENTS,
+            nums = epoll_wait(m_epfd, event_list_ptr.get(), max_events,
                               static_cast<int>(next_timeout));
             if (nums >= 0) {
                 break;
@@ -388,3 +393,4 @@ void IOManager::OnIdle() {  // NOLINT
 void IOManager::OnTimerInsertedFront() { Tickle(); }
 
 }  // namespace wtsclwq
+#pragma clang diagnostic pop

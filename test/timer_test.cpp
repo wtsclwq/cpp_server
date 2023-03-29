@@ -5,7 +5,7 @@
 
 #include "../src/include/timer/timer.h"
 
-#include "../src/include/concurrency/io_manager.h"
+#include "../src/include/io/io_manager.h"
 #include "../src/include/log/log_manager.h"
 
 auto main() -> int {}

@@ -22,7 +22,7 @@ class Timer : public std::enable_shared_from_this<Timer> {
     using ptr = std::shared_ptr<Timer>;
 
     auto Cancel() -> bool;
-    auto Refresh() -> bool;
+    [[maybe_unused]] auto Refresh() -> bool;
     auto Reset(uint64_t msecend, bool from_now) -> bool;
 
   private:
@@ -56,10 +56,10 @@ class TimerManager {
     auto AddTimer(uint64_t msecend, std::function<void()> callback,
                   bool is_recur = false) -> Timer::ptr;
 
-    auto AddCondictionTimer(uint64_t msecend,
-                            const std::function<void()> &callback,
-                            const std::weak_ptr<void> &weak_cond,
-                            bool is_recur = false) -> Timer::ptr;
+    auto AddConditionTimer(uint64_t msecend,
+                           const std::function<void()> &callback,
+                           const std::weak_ptr<void> &weak_cond,
+                           bool is_recur = false) -> Timer::ptr;
 
     /**
      * @description: 返回[距离]执行下一个任务的时间
@@ -67,7 +67,7 @@ class TimerManager {
      */
     auto GetNextTimer() -> uint64_t;
 
-    auto HasTimer() -> bool;
+    [[maybe_unused]] auto HasTimer() -> bool;
 
     void ListExpiredCallbacks(
         std::vector<std::function<void()>> &callbacks_vec);

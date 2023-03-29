@@ -1,70 +1,41 @@
-add_rules("mode.debug", "mode.release")
+add_rules("mode.debug")
 add_requires("boost","yaml-cpp")
+add_packages("boost","yaml-cpp")
 set_languages("c++17")
+set_toolchains("clang")
 
 target("util")
     set_kind("shared")
     add_files("src/util/*.cpp")
-    add_packages("boost","yaml-cpp")
-
-target("log")
-    set_kind("shared")
-    add_files("src/log/*.cpp")
-    add_deps("util")
-    add_packages("boost","yaml-cpp")
-    
-target("config")
-    set_kind("shared")
-    add_files("src/config/*.cpp")
-    add_packages("boost","yaml-cpp")
 
 target("concurrency")
     set_kind("shared")
     add_files("src/concurrency/*.cpp")
-    add_deps("log","config","util")
-    add_packages("boost","yaml-cpp")
+
+target("config")
+    set_kind("shared")
+    add_files("src/config/*.cpp")
+
+target("log")
+    set_kind("shared")
+    add_files("src/log/*.cpp")
+
+target("config")
+    set_kind("shared")
+    add_files("src/config/*.cpp")
 
 target("timer")
     set_kind("shared")
     add_files("src/timer/*.cpp")
-    add_deps("log","config","util","concurrency")
-    add_packages("boost","yaml-cpp")
 
-target("log_test")
-    set_kind("binary")
-    add_files("test/log_test.cpp")
-    add_deps("log","util","config","concurrency")
-    add_packages("boost","yaml-cpp")
-
-target("config_test")
-    set_kind("binary")
-    add_files("test/config_test.cpp")
-    add_deps("log","util","config","concurrency")
-    add_packages("boost","yaml-cpp")
-
-target("util_test")
-    set_kind("binary")
-    add_files("test/util_test.cpp")
-    add_deps("log","util","config","concurrency")
-    add_packages("boost","yaml-cpp")
-
-target("concurrency_test")
-    set_kind("binary")
-    add_files("test/concurrency_test.cpp")
-    add_deps("log","util","config","concurrency","timer")
-    add_packages("boost","yaml-cpp")
-
-target("scheduler_test")
-    set_kind("binary")
-    add_files("test/scheduler_test.cpp")
-    add_deps("log","util","config","concurrency","timer")
-    add_packages("boost","yaml-cpp")
+target("io")
+    set_kind("shared")
+    add_files("src/io/*.cpp")
 
 target("io_manager_test")
     set_kind("binary")
     add_files("test/io_manager_test.cpp")
-    add_deps("log","util","config","concurrency","timer")
-    add_packages("boost","yaml-cpp")
+    add_deps("log","util","config","concurrency","timer","io")
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
 --

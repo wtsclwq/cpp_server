@@ -1,8 +1,8 @@
 /*
  * @Description:
- * @LastEditTime: 2023-03-25 20:22:45
+ * @LastEditTime: 2023-03-29 15:31:57
  */
-#include "../include/concurrency/scheduler.h"
+#include "../include/io/scheduler.h"
 
 #include <unistd.h>
 
@@ -12,6 +12,7 @@
 #include <string>
 #include <utility>
 
+#include "../include/io/hook.h"
 #include "../include/log/log_manager.h"
 #include "../include/util/macro.h"
 
@@ -167,6 +168,8 @@ void Scheduler::Run() {  // NOLINT
     LOG_CUSTOM_INFO(sys_logger, "线程%d开始Run()处理流程", GetThreadId());
     // 所有线程中的Scheduler::Run都是绑定的同一个this
     t_scheduler = this;
+    // 调度器中执行的io系统调用默认为自己hook的版本
+    SetHookEnable(true);
     // 分两种情况:
     // 1.use_caller==true,this.m_root_thread_id==创建者线程ID
     // 2.use_caller==false,this.m_root_thread_id==-1
