@@ -14,19 +14,21 @@ class IPv6Address : public IPAddress {
     IPv6Address(IPv6Address&& other) = delete;
     auto operator=(const IPv6Address& other) = delete;
     auto operator=(IPv6Address&& other) = delete;
+    ~IPv6Address() override = default;
 
+    IPv6Address();
     /**
      * @brief 构造函数：通过sockaddr_in构造对象
      * @param[in] address sockaddr_in引用
      */
-    explicit IPv6Address(const sockaddr_in& address);
+    explicit IPv6Address(const sockaddr_in6& address);
 
     /**
      * @brief 构造函数：通过二进制地址构造对象
      * @param address 二进制32位地址
      * @param port 端口号
      */
-    explicit IPv6Address(uint32_t address = INADDR_ANY, uint64_t port = 0);
+    explicit IPv6Address(const uint8_t address[16], uint16_t port);
 
     /**
      * @brief 静态函数：创建点分十进制地址对应的IPv4Address智能指针
@@ -40,7 +42,12 @@ class IPv6Address : public IPAddress {
     /**
      * @brief 重写的成员函数：获取当前对象对应的sockaddr指针
      */
-    auto GetAddr() const -> sockaddr* override;
+    auto GetAddr() -> sockaddr* override;
+
+    /**
+     * @brief 获取当前对象的const sockaddr指针
+     */
+    auto GetConstAddr() const -> const sockaddr* override;
 
     /**
      * @brief 重写的成员函数：获取当前对象的sockaddr长度
@@ -69,6 +76,13 @@ class IPv6Address : public IPAddress {
     auto NetworkAddress(uint32_t prefix_len) -> IPAddress::ptr override;
 
     /**
+     * @brief 重写的成员函数：获取当前对象主机号的IPAddress智能指针
+     * @param[in] prefix_len 子网掩码位数
+     * @return 成功则返回网络号的IPAddress智能指针，失败则返回nullptr
+     */
+    auto HostAddress(uint32_t prefix_len) -> IPAddress::ptr override;
+
+    /**
      * @brief 重写的成员函数：获取当前对象子网掩码的IPAddress智能指针
      * @param[in] prefix_len 子网掩码位数
      * @return 成功则返回子网掩码的IPAddress智能指针，失败则返回nullptr
@@ -78,7 +92,7 @@ class IPv6Address : public IPAddress {
     /**
      * @brief 重写的成员函数：获取当前对象的端口号
      */
-    auto GetPort() const -> uint32_t override;
+    auto GetPort() const -> uint16_t override;
 
     /**
      * @brief 重写的成员函数：设置当前对象的端口号

@@ -15,28 +15,29 @@ class UnKnowAddress : public Address {
     UnKnowAddress(UnKnowAddress&& other) = delete;
     auto operator=(const UnKnowAddress& other) = delete;
     auto operator=(UnKnowAddress&& other) = delete;
+    ~UnKnowAddress() override = default;
 
     /**
      * @brief 构造函数：根据地址簇构造未知地址
      * @param[in] family 地址簇
      */
-    UnKnowAddress(int family);
+    explicit UnKnowAddress(int family);
 
     /**
      * @brief 构造函数：根据sockaddr构造未知地址
      * @param addr sockaddr对象的引用
      */
-    UnKnowAddress(const sockaddr& addr);
-
-    /**
-     * @brief 重写的析构函数
-     */
-    ~UnKnowAddress() override;
+    explicit UnKnowAddress(const sockaddr& addr);
 
     /**
      * @brief 重写的成员函数：获取当前对象的sockaddr指针
      */
-    auto GetAddr() const -> sockaddr* override;
+    auto GetAddr() -> sockaddr* override;
+
+    /**
+     * @brief 获取当前对象的const sockaddr指针
+     */
+    auto GetConstAddr() const -> const sockaddr* override;
 
     /**
      * @brief 重写的成员函数：获取当前对象的sockaddr长度

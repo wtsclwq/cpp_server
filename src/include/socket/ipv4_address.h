@@ -14,7 +14,9 @@ class IPv4Address : public IPAddress {
     IPv4Address(IPv4Address&& other) = delete;
     auto operator=(const IPv4Address& other) = delete;
     auto operator=(IPv4Address&& other) = delete;
+    ~IPv4Address() override = default;
 
+    IPv4Address();
     /**
      * @brief 构造函数：通过sockaddr_in构造对象
      * @param[in] address sockaddr_in引用
@@ -26,7 +28,7 @@ class IPv4Address : public IPAddress {
      * @param address 二进制32位地址
      * @param port 端口号
      */
-    explicit IPv4Address(uint32_t address = INADDR_ANY, uint64_t port = 0);
+    explicit IPv4Address(uint32_t address, uint16_t port);
 
     /**
      * @brief 静态函数：创建点分十进制地址对应的IPv4Address智能指针
@@ -36,11 +38,14 @@ class IPv4Address : public IPAddress {
      */
     static auto Create(const char* address, uint16_t port = 0)
         -> IPv4Address::ptr;
-
     /**
      * @brief 重写的成员函数：获取当前对象对应的sockaddr指针
      */
-    auto GetAddr() const -> sockaddr* override;
+    auto GetAddr() -> sockaddr* override;
+    /**
+     * @brief 获取当前对象的const sockaddr指针
+     */
+    auto GetConstAddr() const -> const sockaddr* override;
 
     /**
      * @brief 重写的成员函数：获取当前对象的sockaddr长度
@@ -66,10 +71,18 @@ class IPv4Address : public IPAddress {
      * @param[in] prefix_len 子网掩码位数
      * @return 成功则返回网络号的IPAddress智能指针，失败则返回nullptr
      */
+
     auto NetworkAddress(uint32_t prefix_len) -> IPAddress::ptr override;
 
     /**
-     * @brief 重写的成员函数：获取当前对象子网掩码的IPAddress智能指针
+     * @brief 重写的成员函数：获取当前对象主机号的IPAddress智能指针
+     * @param[in] prefix_len 子网掩码位数
+     * @return 成功则返回网络号的IPAddress智能指针，失败则返回nullptr
+     */
+    auto HostAddress(uint32_t prefix_len) -> IPAddress::ptr override;
+
+    /**
+     * @brief 重写的成员函数：获取当前对象主机掩码的IPAddress智能指针
      * @param[in] prefix_len 子网掩码位数
      * @return 成功则返回子网掩码的IPAddress智能指针，失败则返回nullptr
      */
@@ -78,7 +91,7 @@ class IPv4Address : public IPAddress {
     /**
      * @brief 重写的成员函数：获取当前对象的端口号
      */
-    auto GetPort() const -> uint32_t override;
+    auto GetPort() const -> uint16_t override;
 
     /**
      * @brief 重写的成员函数：设置当前对象的端口号

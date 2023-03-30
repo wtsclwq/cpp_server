@@ -371,7 +371,7 @@ target_sources(timer PRIVATE
 # target
 set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
-add_library(util SHARED "")
+add_library(util SHARED "" src/include/util/net_util.h)
 set_target_properties(util PROPERTIES OUTPUT_NAME "util")
 set_target_properties(util PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/release")
 target_include_directories(util PRIVATE

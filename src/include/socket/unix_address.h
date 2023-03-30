@@ -14,6 +14,9 @@ class UnixAddress : public Address {
     UnixAddress(UnixAddress&& other) = delete;
     auto operator=(const UnixAddress& other) = delete;
     auto operator=(UnixAddress&& other) = delete;
+    ~UnixAddress() override = default;
+
+    UnixAddress();
 
     /**
      * @brief 构造函数：通过路径构造UnixAddress
@@ -22,14 +25,14 @@ class UnixAddress : public Address {
     explicit UnixAddress(const std::string& path);
 
     /**
-     * @brief 重写的析构函数
-     */
-    ~UnixAddress() override;
-
-    /**
      * @brief 重写的成员函数：获取当前对象对应的sockaddr指针
      */
-    auto GetAddr() const -> sockaddr* override;
+    auto GetAddr() -> sockaddr* override;
+
+    /**
+     * @brief 获取当前对象的const sockaddr指针
+     */
+    auto GetConstAddr() const -> const sockaddr* override;
 
     /**
      * @brief 重写的成员函数：获取当前对象的sockaddr长度

@@ -25,6 +25,12 @@ class Address {
     Address(Address&& other) = delete;
     auto operator=(const Address& other) = delete;
     auto operator=(Address&& other) = delete;
+    Address() = default;
+    /**
+     * @brief 虚析构函数
+     */
+    virtual ~Address() = default;
+
     /**
      * 通过sockaddr指针获得对应的Address智能指针
      * @param[in] addr sockaddr的指针
@@ -68,11 +74,6 @@ class Address {
         int family = AF_INET) -> bool;
 
     /**
-     * @brief 虚析构函数
-     */
-    virtual ~Address();
-
-    /**
      * @brief 获取当前对象的协议簇
      */
     auto GetFamily() const -> int;
@@ -80,7 +81,12 @@ class Address {
     /**
      * @brief 获取当前对象的sockaddr指针
      */
-    virtual auto GetAddr() const -> sockaddr* = 0;
+    virtual auto GetAddr() -> sockaddr* = 0;
+
+    /**
+     * @brief 获取当前对象的const sockaddr指针
+     */
+    virtual auto GetConstAddr() const -> const sockaddr* = 0;
 
     /**
      * @brief 获取当前对象的sockaddr长度
@@ -115,12 +121,14 @@ class Address {
     auto operator!=(const Address& rhs) const -> bool;
 };
 
-
 /**
- * @brief 采用全局重载方式，重载<<运算符，使得所有Address及其派生类对象都能输入到流中
+ * @brief
+ * 采用全局重载方式，重载<<运算符，使得所有Address及其派生类对象都能输入到流中
  * @param os
  * @param addr
  * @return
  */
-auto operator<<(std::ostream& os, const Address& addr) -> std::ostream&;
+inline auto operator<<(std::ostream& os, const Address& addr) -> std::ostream& {
+    return addr.Insert(os);
+}
 }  // namespace wtsclwq

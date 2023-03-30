@@ -14,7 +14,8 @@ class IPAddress : public Address {
     IPAddress(IPAddress&& other) = delete;
     auto operator=(const IPAddress& other) = delete;
     auto operator=(IPAddress&& other) = delete;
-
+    IPAddress() = default;
+    ~IPAddress() override = default;
     /**
      * @brief 通过域名，IP,服务器名称创建对应的IpAddress智能指针
      * @param[in] address 域名，IP,服务器名等，例如www.baidu.com
@@ -38,21 +39,28 @@ class IPAddress : public Address {
         -> IPAddress::ptr;
 
     /**
-     * @brief 纯虚函数：获取当前对象的广播ip地址
+     * @brief 纯虚函数：获取当前对象的广播ip地址,
      * @param[in] prefix_len 子网掩码位数
      * @return 成功则返回广播地址对应的IPAddress智能指针，失败则返回nullptr
      */
     virtual auto BroadcastAddress(uint32_t prefix_len) -> IPAddress::ptr = 0;
 
     /**
-     * @brief 纯虚函数：获取当前对象的网络号（网段）
+     * @brief 纯虚函数：获取当前对象的网络号
      * @param[in] prefix_len 子网掩码位数
      * @return 成功则返回网络号对应的IPAddress智能指针，失败则返回nullptr
      */
     virtual auto NetworkAddress(uint32_t prefix_len) -> IPAddress::ptr = 0;
 
     /**
-     * @brief 纯虚函数：获取当前对象的子网掩码
+     * @brief 纯虚函数：获取当前对象的主机号
+     * @param[in] prefix_len 子网掩码位数
+     * @return 成功则返回网络号对应的IPAddress智能指针，失败则返回nullptr
+     */
+    virtual auto HostAddress(uint32_t prefix_len) -> IPAddress::ptr = 0;
+
+    /**
+     * @brief 纯虚函数：获取当前对象的子网掩码，即11111.....000
      * @param[in] prefix_len 子网掩码位数
      * @return 成功则返回子网掩码对应的IPAddress智能指针，失败则返回nullptr
      */
@@ -61,7 +69,7 @@ class IPAddress : public Address {
     /**
      * @brief 纯虚函数：获取当前对象的端口号
      */
-    virtual auto GetPort() const -> uint32_t = 0;
+    virtual auto GetPort() const -> uint16_t = 0;
 
     /**
      * @brief 纯虚函数：设置当前对象的端口号
