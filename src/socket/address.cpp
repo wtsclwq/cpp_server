@@ -101,7 +101,7 @@ auto Address::LookupAny(const std::string &host, int family, int type,
     return nullptr;
 }
 
-auto Address::GetInterFaceAddress(
+auto Address::GetAllInterFaceAddress(
     std::multimap<std::string, std::pair<Address::ptr, uint32_t>> &result,
     int family) -> bool {
     struct ifaddrs *next;
@@ -109,10 +109,10 @@ auto Address::GetInterFaceAddress(
 
     // 将网卡地址信息存到results
     if (getifaddrs(&results) != 0) {
-        LOG_CUSTOM_ERROR(
-            sys_logger,
-            "Address::GetInterFaceAddress getifaddrs() err = %d, errstr = %s",
-            errno, strerror(errno));
+        LOG_CUSTOM_ERROR(sys_logger,
+                         "Address::GetAllInterFaceAddress getifaddrs() err = "
+                         "%d, errstr = %s",
+                         errno, strerror(errno));
         return false;
     }
     try {
@@ -160,6 +160,30 @@ auto Address::GetInterFaceAddress(
     }
     freeifaddrs(results);
     return !result.empty();
+}
+
+auto Address::GetSpecficInterFaceAddress(
+    std::vector<std::pair<Address::ptr, uint32_t>> &result_vec,
+    const std::string &interface, int family) {
+    if (interface.empty() || interface == "*") {
+        if (family == AF_INET || family == AF_UNSPEC) {
+            result_vec.emplace_back(std::make_shared<IPv4Address>(), 0);
+        }
+        if (family == AF_INET6 || family == AF_UNSPEC) {
+            result_vec.emplace_back(std::make_shared<IPv6Address>(), 0);
+        }
+        return true;
+    }
+    std::multimap<std::string, std::pair<Address::ptr, uint32_t>> results_map;
+    if (!GetAllInterFaceAddress(results_map, family)) {
+        return false;
+    }
+
+    for (auto iter_pair = results_map.equal_range(interface);
+         iter_pair.first != iter_pair.second; ++iter_pair.first) {
+        result_vec.push_back(iter_pair.first->second);
+    }
+    return !result_vec.empty();
 }
 
 auto Address::GetFamily() const -> int { return GetConstAddr()->sa_family; }

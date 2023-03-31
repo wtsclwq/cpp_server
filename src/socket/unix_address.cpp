@@ -42,6 +42,8 @@ auto UnixAddress::GetConstAddr() const -> const sockaddr* {
 
 auto UnixAddress::GetAddrLen() const -> socklen_t { return m_length; }
 
+void UnixAddress::SetAddrLen(socklen_t length) { m_length = length; }
+
 auto UnixAddress::Insert(std::ostream& os) const -> std::ostream& {
     if (m_length > offsetof(sockaddr_un, sun_path) &&
         m_addr.sun_path[0] == '0') {

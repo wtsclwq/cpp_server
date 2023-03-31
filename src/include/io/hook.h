@@ -72,6 +72,9 @@ extern getsockopt_func getsockopt_f;
 using setsockopt_func = int (*)(int, int, int, const void *, socklen_t);
 extern setsockopt_func setsockopt_f;
 
+extern auto ConnectWithTimeout(int fd, const struct sockaddr *addr,
+                               socklen_t addrlen, uint64_t timeout_ms) -> int;
+
 //////// unistd.h
 using read_func = ssize_t (*)(int, void *, size_t);
 extern read_func read_f;

@@ -39,6 +39,7 @@ auto IPAddress::Create(const char *address, uint16_t port) -> IPAddress::ptr {
         return nullptr;
     }
 }
+
 auto IPAddress::LookupAnyAddress(const std::string &host, int family, int type,
                                  int protocol) -> IPAddress::ptr {
     std::vector<Address::ptr> result;

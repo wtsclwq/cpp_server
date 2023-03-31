@@ -40,6 +40,16 @@ class UnixAddress : public Address {
     auto GetAddrLen() const -> socklen_t override;
 
     /**
+     * @brief 成员函数：设置sockaddr_len
+     */
+    void SetAddrLen(socklen_t length);
+
+    /**
+     * @brief 成员函数：获取当前对象的路径
+     */
+    auto GetPath() const -> std::string;
+
+    /**
      * @brief 重写的成员函数：将可读的地址的写入到stream中
      * @param[in] os 要写入的stream
      * @return 写入后的stream

@@ -5,6 +5,8 @@
 #include "../include/socket/unknow_address.h"
 
 namespace wtsclwq {
+UnKnowAddress::UnKnowAddress() { m_addr.sa_family = AF_UNSPEC; }
+
 UnKnowAddress::UnKnowAddress(int family) { m_addr.sa_family = family; }
 
 UnKnowAddress::UnKnowAddress(const sockaddr& addr) { m_addr = addr; }

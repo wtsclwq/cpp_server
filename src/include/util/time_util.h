@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iomanip>
+static const int BASE_NUMBER_OF_SECONDS = 1000;
 
 namespace wtsclwq {
 auto inline GetCurrentMS() -> uint64_t {

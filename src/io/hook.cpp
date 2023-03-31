@@ -8,24 +8,21 @@
 
 #include <cerrno>
 #include <cstdarg>
-#include <cstdint>
 
 #include "../include/config/config.h"
 #include "../include/io/fd_manager.h"
 #include "../include/log/log_manager.h"
 #include "../include/util/macro.h"
+#include "../include/util/time_util.h"
 
-static const int BASE_NUMBER_OF_SECONDS = 1000;
 namespace wtsclwq {
 
 static thread_local bool t_hook_enabled = false;
 
 static Logger::ptr sys_logger = GET_LOGGER_BY_NAME("system");
 
-const int default_timeout = 5000;
 static wtsclwq::ConfigVar<int>::ptr g_tcp_connect_timeout =
-    wtsclwq::Config::Lookup("tcp.connect.timeout", default_timeout,
-                            "tcp 连接超时上限");
+    wtsclwq::Config::Lookup("tcp.connect.timeout", 5000, "tcp 连接超时上限");
 
 #define DEAL_FUNC(DO) /* NOLINT */ \
     DO(sleep)                      \
@@ -50,9 +47,11 @@ static wtsclwq::ConfigVar<int>::ptr g_tcp_connect_timeout =
     DO(fcntl)                      \
     DO(ioctl)
 
-void hook_init() {
+void HookInit() {
     static bool is_inited = false;
-    if (is_inited) return;
+    if (is_inited) {
+        return;
+    }
 
 #define TRY_LOAD_HOOK_FUNC(name) /* NOLINT */ \
     name##_f = (name##_func)dlsym(RTLD_NEXT, #name);
@@ -61,10 +60,10 @@ void hook_init() {
 #undef TRY_LOAD_HOOK_FUNC
 }
 
-static uint64_t s_connect_timeout = -1;
+static uint64_t s_connect_timeout = UINT64_MAX;
 struct HookIniter {
     HookIniter() {
-        hook_init();
+        HookInit();
         s_connect_timeout = g_tcp_connect_timeout->GetValue();
         g_tcp_connect_timeout->AddListener(
             [](const int &old_value, const int &new_value) {
@@ -429,7 +428,7 @@ auto fcntl(int fd, int cmd, ... /* arg */) -> int {
             if (!fdp || fdp->IsClosed() || !fdp->IsSocket()) {
                 return fcntl_f(fd, cmd, arg);
             }
-            fdp->SetUserNonBlock(arg & O_NONBLOCK);
+            fdp->SetUserNonBlock((arg & O_NONBLOCK) != 0);
             // 根据这个 fd 的包装对象是否设置了系统层面的非阻塞，
             // socket fd 会被强制设置为非阻塞，其他则不一定
             if (fdp->GetSystemNonBlock()) {
@@ -493,9 +492,9 @@ auto fcntl(int fd, int cmd, ... /* arg */) -> int {
 
 auto ioctl(int fd, unsigned long request, ...) -> int {  // NOLINT
     va_list va;
-    va_start(va, request);           // NOLINT
-    void *arg = va_arg(va, void *);  // NOLINT
-    va_end(va);                      // NOLINT
+    va_start(va, request);                               // NOLINT
+    void *arg = va_arg(va, void *);                      // NOLINT
+    va_end(va);                                          // NOLINT
 
     if (FIONBIO == request) {
         bool user_nonblock = *static_cast<int *>(arg) != 0;

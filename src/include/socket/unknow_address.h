@@ -15,7 +15,9 @@ class UnKnowAddress : public Address {
     UnKnowAddress(UnKnowAddress&& other) = delete;
     auto operator=(const UnKnowAddress& other) = delete;
     auto operator=(UnKnowAddress&& other) = delete;
+    UnKnowAddress();
     ~UnKnowAddress() override = default;
+
 
     /**
      * @brief 构造函数：根据地址簇构造未知地址

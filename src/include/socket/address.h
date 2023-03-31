@@ -69,9 +69,20 @@ class Address {
      * @param[in] family 协议簇(AF_INET,AF_INET6)
      * @return 获取是否成功
      */
-    static auto GetInterFaceAddress(
+    static auto GetAllInterFaceAddress(
         std::multimap<std::string, std::pair<Address::ptr, uint32_t>>& result,
         int family = AF_INET) -> bool;
+
+    /**
+     * @brief 获取指定网卡的地址和子网掩码位数
+     * @param[out] result_vec 保存指定网卡所有地址
+     * @param[in] interface 网卡名称
+     * @param[in] family 协议族(AF_INT, AF_INT6, AF_UNIX)
+     * @return 是否成功
+     */
+    static auto GetSpecficInterFaceAddress(
+        std::vector<std::pair<Address::ptr, uint32_t>>& result_vec,
+        const std::string& interface, int family = AF_INET);
 
     /**
      * @brief 获取当前对象的协议簇
