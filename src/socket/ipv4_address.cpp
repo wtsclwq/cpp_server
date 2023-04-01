@@ -49,7 +49,7 @@ auto IPv4Address::GetConstAddr() const -> const sockaddr* {
 
 auto IPv4Address::GetAddrLen() const -> socklen_t { return sizeof(m_addr); }
 
-auto IPv4Address::Insert(std::ostream& os) const -> std::ostream& {
+auto IPv4Address::Dump(std::ostream& os) const -> std::ostream& {
     uint32_t addr = GetBigEndianValue(m_addr.sin_addr.s_addr);
     os << ((addr >> 24) & 0xFF) << "," << ((addr >> 16) & 0xFF) << ","
        << ((addr >> 8) & 0xFF) << "," << (addr & 0xFF);

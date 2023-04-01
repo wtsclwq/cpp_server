@@ -108,7 +108,7 @@ class Address {
      * @brief 将可读的地址的写入到stream中
      * @return 写入了地址的流
      */
-    virtual auto Insert(std::ostream& os) const -> std::ostream& = 0;
+    virtual auto Dump(std::ostream& os) const -> std::ostream& = 0;
 
     /**
      * @brief 返回地址的可读字符串
@@ -140,6 +140,6 @@ class Address {
  * @return
  */
 inline auto operator<<(std::ostream& os, const Address& addr) -> std::ostream& {
-    return addr.Insert(os);
+    return addr.Dump(os);
 }
 }  // namespace wtsclwq

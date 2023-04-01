@@ -51,7 +51,7 @@ class UnKnowAddress : public Address {
      * @param os 要被写入的流
      * @return 写入之后的流
      */
-    auto Insert(std::ostream& os) const -> std::ostream& override;
+    auto Dump(std::ostream& os) const -> std::ostream& override;
 
   private:
     sockaddr m_addr{};  // 存储未知地址

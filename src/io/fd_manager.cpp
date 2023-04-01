@@ -14,7 +14,7 @@ namespace wtsclwq {
 FileDescriptor::FileDescriptor(int filedesc)
     : m_is_init(false), m_is_socket(false), m_system_non_block(false),
       m_user_non_block(false), m_is_closed(false), m_fd(filedesc),
-      m_recv_timeout(-1), m_send_timeout(-1), m_iom(nullptr) {
+      m_recv_timeout(UINT64_MAX), m_send_timeout(UINT64_MAX), m_iom(nullptr) {
     Init();
 }
 
@@ -22,8 +22,8 @@ auto FileDescriptor::Init() -> bool {
     if (m_is_init) {
         return true;
     }
-    m_recv_timeout = -1;
-    m_send_timeout = -1;
+    m_recv_timeout = UINT64_MAX;
+    m_send_timeout = UINT64_MAX;
     struct stat fd_stat {};
     if (fstat(m_fd, &fd_stat) == -1) {
         m_is_init = false;

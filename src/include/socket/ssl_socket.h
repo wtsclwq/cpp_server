@@ -11,31 +11,32 @@
 #include "socket.h"
 namespace wtsclwq {
 
-class SSLSocket : public Socket {
+class SslSocket : public Socket {
   public:
-    using ptr = std::shared_ptr<SSLSocket>;
-    SSLSocket(const SSLSocket &other) = delete;
-    SSLSocket(SSLSocket *&other) = delete;
-    auto operator=(const SSLSocket &other) = delete;
-    auto operator=(SSLSocket &&other) = delete;
-    SSLSocket() = default;
-    ~SSLSocket() override = default;
+    using ptr = std::shared_ptr<SslSocket>;
+    SslSocket(const SslSocket &other) = delete;
+    SslSocket(SslSocket *&other) = delete;
+    auto operator=(const SslSocket &other) = delete;
+    auto operator=(SslSocket &&other) = delete;
+    SslSocket() = default;
+    ~SslSocket() override = default;
 
-    SSLSocket(int family, int type, int protocol = 0);
+    SslSocket(int family, int type, int protocol = 0);
     /**
      * @brief 创建一个TcpSslSocket
      */
-    static auto CreateTcpSslSocket(Address::ptr address) -> SSLSocket::ptr;
+    static auto CreateTcpSslSocket(const Address::ptr &address)
+        -> SslSocket::ptr;
 
     /**
      * @brief 创建一个Ipv4的TcpSslSocket
      */
-    static auto CreateIpv4TcpSslSocket() -> SSLSocket::ptr;
+    static auto CreateIpv4TcpSslSocket() -> SslSocket::ptr;
 
     /**
      * @brief 创建一个Ipv6的TcpSslSocket
      */
-    static auto CreateIpv6TcpSslSocket() -> SSLSocket::ptr;
+    static auto CreateIpv6TcpSslSocket() -> SslSocket::ptr;
 
     auto Bind(const Address::ptr &address) -> bool override;
 
@@ -58,12 +59,13 @@ class SSLSocket : public Socket {
     auto SendTo(const void *buffer, size_t length, const Address::ptr &to,
                 int flags) -> ssize_t override;
 
-    auto SendIovecTo(iovec *buffers, size_t length,
-                     const Address::ptr &to, int flags) -> ssize_t override;
+    auto SendIovecTo(iovec *buffers, size_t length, const Address::ptr &to,
+                     int flags) -> ssize_t override;
 
     auto Recv(void *buffer, size_t length, int flags) -> ssize_t override;
 
-    auto RecvIovec(iovec *buffers, size_t length, int flags) -> ssize_t override;
+    auto RecvIovec(iovec *buffers, size_t length, int flags)
+        -> ssize_t override;
 
     auto RecvFrom(void *buffer, size_t length, const Address::ptr &from,
                   int flags) -> ssize_t override;
@@ -75,11 +77,14 @@ class SSLSocket : public Socket {
 
     auto ToString() const -> std::string override;
 
+    auto LoadCertificates(const std::string &cert_file,
+                          const std::string &key_file) -> bool;
+
   protected:
     auto Init(int sock) -> bool override;
 
   private:
-    std::shared_ptr<SSL_CTX> m_ctx;
-    std::shared_ptr<SSL> m_ssl;
+    std::shared_ptr<SSL_CTX> m_ctx;  // SSL上下文
+    std::shared_ptr<SSL> m_ssl;      // SSL
 };
 }  // namespace wtsclwq

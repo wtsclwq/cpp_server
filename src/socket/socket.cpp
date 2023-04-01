@@ -68,6 +68,7 @@ auto Socket::GetSendTimeout() const -> uint64_t {
     FileDescriptor::ptr fdp =
         FileDescriptorManager ::GetInstancePtr()->Get(m_socket);
     if (fdp != nullptr) {
+        // 获取的时候其实使用fd_manager或者getsockopt是一样的，因为一定是先设置，设置的时候就同时更改了内核和fd_manager
         return fdp->GetTimeout(SO_SNDTIMEO);
     }
     return -1;
@@ -79,6 +80,7 @@ void Socket::SetSendTimeout(uint64_t timeout) {
             static_cast<int>(timeout % BASE_NUMBER_OF_SECONDS *
                              BASE_NUMBER_OF_SECONDS)
     };
+    // 注意这里设置的时候直接调用setsockopt是因为我们hook了这个函数，里面会对fd_manager进行操作
     SetOption(SOL_SOCKET, SO_SNDTIMEO, tv);
 }
 
@@ -86,6 +88,7 @@ auto Socket::GetRecvTimeout() const -> uint64_t {
     FileDescriptor::ptr fdp =
         FileDescriptorManager ::GetInstancePtr()->Get(m_socket);
     if (fdp != nullptr) {
+        // 获取的时候其实使用fd_manager或者getsockopt是一样的，因为一定是先设置，设置的时候就同时更改了内核和fd_manager
         return fdp->GetTimeout(SO_RCVTIMEO);
     }
     return -1;
@@ -97,6 +100,7 @@ void Socket::SetRecvTimeout(uint64_t timeout) {
             static_cast<int>(timeout % BASE_NUMBER_OF_SECONDS *
                              BASE_NUMBER_OF_SECONDS)
     };
+    // 注意这里设置的时候直接调用setsockopt是因为我们hook了这个函数，里面会对fd_manager进行操作
     SetOption(SOL_SOCKET, SO_RCVTIMEO, tv);
 }
 
@@ -184,6 +188,7 @@ auto Socket::Accept() -> Socket::ptr {
                          new_raw_socket, errno, strerror(errno))
         return nullptr;
     }
+    // 初始化这个新的socket
     if (new_socket->Init(new_raw_socket)) {
         return new_socket;
     }

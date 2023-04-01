@@ -59,7 +59,7 @@ class IPv6Address : public IPAddress {
      * @param[in] os 要写入的stream
      * @return 写入后的stream
      */
-    auto Insert(std::ostream& os) const -> std::ostream& override;
+    auto Dump(std::ostream& os) const -> std::ostream& override;
 
     /**
      * @brief 重写的成员函数：获取当前对象的广播地址的IPAddress智能指针

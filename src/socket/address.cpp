@@ -191,7 +191,7 @@ auto Address::GetFamily() const -> int { return GetConstAddr()->sa_family; }
 auto Address::ToString() const -> std::string {
     std::stringstream ss{};
     // 每个派生类是需要重写Insert函数即可
-    Insert(ss);
+    Dump(ss);
     return ss.str();
 }
 

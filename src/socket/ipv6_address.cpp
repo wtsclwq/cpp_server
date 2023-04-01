@@ -48,7 +48,7 @@ auto IPv6Address::GetConstAddr() const -> const sockaddr* {
 
 auto IPv6Address::GetAddrLen() const -> socklen_t { return sizeof(m_addr); }
 
-auto IPv6Address::Insert(std::ostream& os) const -> std::ostream& {
+auto IPv6Address::Dump(std::ostream& os) const -> std::ostream& {
     os << "[";
     auto addr = (uint16_t*)m_addr.sin6_addr.s6_addr;  // NOLINT
     bool used_zeros = false;

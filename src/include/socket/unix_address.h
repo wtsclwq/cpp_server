@@ -54,7 +54,7 @@ class UnixAddress : public Address {
      * @param[in] os 要写入的stream
      * @return 写入后的stream
      */
-    auto Insert(std::ostream& os) const -> std::ostream& override;
+    auto Dump(std::ostream& os) const -> std::ostream& override;
 
   private:
     sockaddr_un m_addr{};   // 存储unix地址
