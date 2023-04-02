@@ -201,10 +201,9 @@ auto Socket::Connect(const Address::ptr &address, uint64_t timeout) -> bool {
     if (!IsValid()) {
         NewSocket();
     }
-    if (IsValid()) {
+    if (!IsValid()) {
         return false;
     }
-
     if (address->GetFamily() != m_family) {
         LOG_CUSTOM_ERROR(
             sys_logger,
@@ -471,6 +470,7 @@ void Socket::InitSocket() {
     int val = 1;
     SetOption(SOL_SOCKET, SO_REUSEADDR, val);
     if (m_type == SOCK_STREAM) {
+        // 禁用 Nagle 算法，即开启了数据无延迟发送模式。
         SetOption(IPPROTO_TCP, TCP_NODELAY, val);
     }
 }

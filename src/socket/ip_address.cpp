@@ -16,6 +16,7 @@ auto IPAddress::Create(const char *address, uint16_t port) -> IPAddress::ptr {
     addrinfo *results;
 
     memset(&hints, 0, sizeof(addrinfo));
+    // 限定数字地址
     hints.ai_flags = AI_NUMERICHOST;
     hints.ai_family = AF_UNSPEC;
 

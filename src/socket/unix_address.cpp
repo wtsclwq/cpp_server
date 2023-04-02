@@ -44,6 +44,19 @@ auto UnixAddress::GetAddrLen() const -> socklen_t { return m_length; }
 
 void UnixAddress::SetAddrLen(socklen_t length) { m_length = length; }
 
+auto UnixAddress::GetPath() const -> std::string {
+    std::stringstream ss;
+    if (m_length > offsetof(sockaddr_un, sun_path) &&
+        m_addr.sun_path[0] == '0') {
+        ss << "\\0"
+           << std::string(m_addr.sun_path + 1,
+                          m_length - offsetof(sockaddr_un, sun_path) - 1);
+    } else {
+        ss << m_addr.sun_path;
+    }
+    return ss.str();
+}
+
 auto UnixAddress::Dump(std::ostream& os) const -> std::ostream& {
     if (m_length > offsetof(sockaddr_un, sun_path) &&
         m_addr.sun_path[0] == '0') {

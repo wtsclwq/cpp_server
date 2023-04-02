@@ -67,6 +67,19 @@ auto Address::Lookup(std::vector<Address::ptr> &result, const std::string &host,
             LOG_INFO(sys_logger, "Address::Lookup ipv6 node = " + node);
         }
     }
+
+    // 检查 node service
+    if (node.empty()) {
+        service = reinterpret_cast<const char *>(
+            memchr(host.c_str(), ':', host.size()));
+        if (service != nullptr) {
+            if (strchr(service + 1, ':') == nullptr) {
+                node = host.substr(0, service - host.c_str());
+                ++service;
+            }
+        }
+    }
+
     // 没有[]包裹
     if (node.empty()) {
         node = host;
@@ -112,14 +125,14 @@ auto Address::GetAllInterFaceAddress(
         LOG_CUSTOM_ERROR(sys_logger,
                          "Address::GetAllInterFaceAddress getifaddrs() err = "
                          "%d, errstr = %s",
-                         errno, strerror(errno));
+                         errno, strerror(errno))
         return false;
     }
     try {
         // 可能有多个网卡信息
         for (next = results; next != nullptr; next = next->ifa_next) {
             Address::ptr addr;
-            uint32_t prefix_len = ~0U;
+            uint32_t prefix_len = UINT32_MAX;
             // 如果不是 指定了family且指定family与目前遍历的对象不相符
             if (family != AF_UNSPEC && family != next->ifa_addr->sa_family) {
                 continue;
@@ -209,10 +222,12 @@ auto Address::operator<(const Address &rhs) const -> bool {
     }
     return false;
 }
+
 auto Address::operator==(const Address &rhs) const -> bool {
     return GetAddrLen() == rhs.GetAddrLen() &&
            memcmp(GetConstAddr(), rhs.GetConstAddr(), GetAddrLen()) == 0;
 }
+
 auto Address::operator!=(const Address &rhs) const -> bool {
     return !(*this == rhs);
 }

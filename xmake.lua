@@ -1,8 +1,8 @@
 set_project("cpp-server")
 add_rules("mode.release", "mode.debug")
-add_requires("boost","yaml-cpp")
+add_requires("boost","yaml-cpp","openssl")
 add_packages("boost","yaml-cpp")
-set_languages("cxx17")
+set_languages("c++17")
 set_toolchains("clang")
 
 target("util")
@@ -36,11 +36,33 @@ target("io")
 target("socket")
     set_kind("shared")
     add_files("src/socket/*.cpp")
+    add_packages("openssl")
+
+target("serialize")
+    set_kind("shared")
+    add_files("src/serialize/*.cpp")
 
 target("io_manager_test")
     set_kind("binary")
     add_files("test/io_manager_test.cpp")
     add_deps("log","util","config","concurrency","timer","io")
+
+target("address_test")
+    set_kind("binary")
+    add_files("test/address_test.cpp")
+    add_deps("socket","log","util","config","concurrency","timer","io")
+
+target("socket_test")
+    set_kind("binary")
+    add_files("test/socket_test.cpp")
+    add_deps("socket","log","util","config","concurrency","timer","io")
+
+target("serialize_test")
+    set_kind("binary")
+    add_files("test/serialize_test.cpp")
+    add_deps("serialize","socket","log","util","config","concurrency","timer","io")
+
+
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
 --

@@ -161,7 +161,7 @@ class Socket : public std::enable_shared_from_this<Socket> {
     virtual auto Close() -> bool;
 
     /**
-     * @brief 虚成员函数：向this发送数据
+     * @brief 虚成员函数：向this发送数据（TCP）
      * @param[in] buffer 待发送的数据缓冲
      * @param[in] length 待发送的数据长度
      * @param[in] flags  标识字
@@ -173,7 +173,7 @@ class Socket : public std::enable_shared_from_this<Socket> {
     virtual auto Send(const void* buffer, size_t length, int flags) -> ssize_t;
 
     /**
-     * @brief 虚成员函数：向this发送数据
+     * @brief 虚成员函数：向this发送数据（TCP）
      * @param[in] buffers 待发送数据的内存(iovec数组)
      * @param[in] length 待发送的数据长度(iovec数组长度)
      * @param[in] flags  标识字
@@ -185,7 +185,7 @@ class Socket : public std::enable_shared_from_this<Socket> {
     virtual auto SendIovec(iovec* buffers, size_t length, int flags) -> ssize_t;
 
     /**
-     * @brief 虚成员函数：向目标地址发送数据
+     * @brief 虚成员函数：向目标地址发送数据（UDP）
      * @param[in] buffer 待发送数据
      * @param[in] length 待发送数据长度
      * @param[in] to 发送的目标地址
@@ -199,7 +199,7 @@ class Socket : public std::enable_shared_from_this<Socket> {
                         const Address::ptr& to, int flags) -> ssize_t;
 
     /**
-     * @brief 虚成员函数：向目标地址发送数据
+     * @brief 虚成员函数：向目标地址发送数据（UDP）
      * @param[in] buffers 待发送数据的内存(iovec数组)
      * @param[in] length 待发送数据的长度(iovec长度)
      * @param[in] to 发送的目标地址
@@ -213,7 +213,7 @@ class Socket : public std::enable_shared_from_this<Socket> {
                              const Address::ptr& to, int flags) -> ssize_t;
 
     /**
-     * @brief 虚成员函数：this从缓冲接受数据
+     * @brief 虚成员函数：this从缓冲接受数据（TCP）
      * @param[out] buffer 接收数据的内存
      * @param[in] length 接收数据的内存大小
      * @param[in] flags 标志字
@@ -225,7 +225,7 @@ class Socket : public std::enable_shared_from_this<Socket> {
     virtual auto Recv(void* buffer, size_t length, int flags) -> ssize_t;
 
     /**
-     * @brief 虚成员函数：this从缓冲接受数据
+     * @brief 虚成员函数：this从缓冲接受数据（TCP）
      * @param[out] buffers 接收数据的内存(iovec数组)
      * @param[in] length 接收数据的内存大小(iovec数组长度)
      * @param[in] flags 标志字
@@ -237,7 +237,7 @@ class Socket : public std::enable_shared_from_this<Socket> {
     virtual auto RecvIovec(iovec* buffers, size_t length, int flags) -> ssize_t;
 
     /**
-     * @brief 虚成员函数：从指定地址接受数据
+     * @brief 虚成员函数：从指定地址接受数据（UDP）
      * @param[out] buffer 接收数据的内存
      * @param[in] length 接收数据的内存大小
      * @param[out] from 发送端地址
@@ -251,7 +251,7 @@ class Socket : public std::enable_shared_from_this<Socket> {
                           int flags) -> ssize_t;
 
     /**
-     * @brief 虚成员函数：从指定地址接受数据
+     * @brief 虚成员函数：从指定地址接受数据（UDP）
      * @param[out] buffers 接收数据的内存(iovec数组)
      * @param[in] length 接收数据的内存大小(iovec数组长度)
      * @param[out] from 发送端地址
