@@ -42,6 +42,10 @@ target("serialize")
     set_kind("shared")
     add_files("src/serialize/*.cpp")
 
+target("http")
+    set_kind("shared")
+    add_files("src/http/*.cpp")
+
 target("io_manager_test")
     set_kind("binary")
     add_files("test/io_manager_test.cpp")

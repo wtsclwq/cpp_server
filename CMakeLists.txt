@@ -173,6 +173,59 @@ target_sources(config PRIVATE
 # target
 set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+add_library(http SHARED "")
+set_target_properties(http PROPERTIES OUTPUT_NAME "http")
+set_target_properties(http PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
+target_include_directories(http PRIVATE
+        /home/wtsclwq/.xmake/packages/b/boost/1.81.0/f9de8b04e29c494587e2d3e3c7627877/include
+        /home/wtsclwq/.xmake/packages/y/yaml-cpp/0.7.0/d02abb58a6cb4e8fab7071bfdba1e372/include
+        )
+target_compile_options(http PRIVATE
+        $<$<COMPILE_LANGUAGE:C>:-m64>
+        $<$<COMPILE_LANGUAGE:CXX>:-m64>
+        )
+set_target_properties(http PROPERTIES CXX_EXTENSIONS OFF)
+target_compile_features(http PRIVATE cxx_std_17)
+if (MSVC)
+    target_compile_options(http PRIVATE $<$<CONFIG:Debug>:-Od>)
+else ()
+    target_compile_options(http PRIVATE -O0)
+endif ()
+if (MSVC)
+    target_compile_options(http PRIVATE -Zi)
+else ()
+    target_compile_options(http PRIVATE -g)
+endif ()
+if (MSVC)
+    set_property(TARGET http PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif ()
+target_link_libraries(http PRIVATE
+        boost_atomic-mt
+        boost_filesystem-mt
+        bz2
+        z
+        yaml-cpp
+        pthread
+        dl
+        )
+target_link_directories(http PRIVATE
+        /home/wtsclwq/.xmake/packages/b/boost/1.81.0/f9de8b04e29c494587e2d3e3c7627877/lib
+        /home/wtsclwq/.xmake/packages/y/yaml-cpp/0.7.0/d02abb58a6cb4e8fab7071bfdba1e372/lib
+        )
+target_link_options(http PRIVATE
+        -m64
+        )
+target_sources(http PRIVATE
+        src/http/http_request.cpp
+        src/http/http_response.cpp
+        src/http/http_method.cpp
+        src/http/http_status.cpp
+        )
+
+# target
+set(CMAKE_C_COMPILER "/usr/bin/clang")
+set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 add_library(io SHARED "")
 set_target_properties(io PROPERTIES OUTPUT_NAME "io")
 set_target_properties(io PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
@@ -663,6 +716,7 @@ target_link_options(util PRIVATE
         )
 target_sources(util PRIVATE
         src/util/fs_util.cpp
+        src/util/string_util.cpp
         src/util/tread_util.cpp
         )
 
