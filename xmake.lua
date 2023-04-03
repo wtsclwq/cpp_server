@@ -80,6 +80,16 @@ target("parser_test")
     add_files("test/parser_test.cpp")
     add_deps("http","serialize","socket","log","util","config","concurrency","timer","io")
 
+target("tcp_server_test")
+    set_kind("binary")
+    add_files("test/tcp_server_test.cpp")
+    add_deps("server","http","serialize","socket","log","util","config","concurrency","timer","io")
+
+target("tcp_client_test")
+    set_kind("binary")
+    add_files("test/tcp_client_test.cpp")
+    add_deps("server","http","serialize","socket","log","util","config","concurrency","timer","io")
+
 
 --
 -- If you want to known more usage about xmake, please see https://xmake.io

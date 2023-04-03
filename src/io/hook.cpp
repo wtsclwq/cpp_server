@@ -94,9 +94,6 @@ static auto DoIO(int fd, OriginFunc func, const char *hook_func_name,  // NOLINT
         return func(fd, std::forward<Args>(args)...);
     }
 
-    // LOG_CUSTOM_DEBUG(wtsclwq::sys_logger, "DoIO 代理执行系统函数 %s",
-    // hook_func_name);
-
     wtsclwq::FileDescriptor::ptr fdp =
         wtsclwq::FileDescriptorManager::GetInstancePtr()->Get(fd);
     if (!fdp) {
@@ -125,22 +122,19 @@ RETRY:
     // 说明在阻塞状态,直接把这个fd 丢到 IOManager 里监听对应事件,
     // 等到事件触发后再返回当前协程上下文继续尝试
     if (flag == -1 && errno == EAGAIN) {
-        LOG_CUSTOM_DEBUG(wtsclwq::sys_logger, "DoIO(%s): 开始异步等待",
-                         hook_func_name);
-
         auto *iom = wtsclwq::IOManager::GetCurIOManager();
         wtsclwq::Timer::ptr timer;
         std::weak_ptr<TimerInfo> timer_info_wp(timer_info);
         // 如果设置了超时时间，在指定时间后取消掉该 fd 的事件监听
         if (timeout != static_cast<uint64_t>(-1)) {
             // 添加一个定时器,定时器的触发时间是该FileDescriptor的对应的event的超时时间
-            // 如果这个定时器触发了,说明这次在该fd上执行的hook函数超时了
+            //  如果这个定时器触发了,说明这次在该fd上执行的hook函数超时了
             timer = iom->AddConditionTimer(
                 timeout,
                 [timer_info_wp, fd, iom, event]() {
                     // 这个函数会被封装到OnTimer中,进而被调度器执行,
                     // 执行一次后,条件就会被设置为超时,然后取消并且[触发]对fd上event的监听,
-                    // 确保后续的事件监听能够正确的被添加
+                    //  确保后续的事件监听能够正确的被添加
                     // 当循环到第二次添加这个timer的时候,就不会执行if后面的语句了
                     auto time_condition = timer_info_wp.lock();
                     if (!time_condition || time_condition->cancelled != 0) {
@@ -152,7 +146,8 @@ RETRY:
                 },
                 timer_info_wp);
         }
-        //  如果事件触发就回到这里,因为第三个参数不设置的话,事件的回调默认是回到cur_fiber
+        //
+        // 如果事件触发就回到这里,因为第三个参数不设置的话,事件的回调默认是回到cur_fiber
         int ret = iom->AddEvent(fd, static_cast<wtsclwq::EventType>(event));
         if (ret == -1) {
             LOG_CUSTOM_ERROR(wtsclwq::sys_logger, "%s addEventListener(%d, %u)",
@@ -177,7 +172,8 @@ RETRY:
         }
         goto RETRY;  // NOLINT
     }
-    LOG_CUSTOM_DEBUG(wtsclwq::sys_logger, "DoIO end errno %d", errno);
+    LOG_CUSTOM_DEBUG(wtsclwq::sys_logger, "DoIO end errno %d, flag = %d", errno,
+                     flag);
     return flag;
 }
 
@@ -343,7 +339,7 @@ auto accept(int fd, struct sockaddr *addr, socklen_t *len) -> int {
     ssize_t flag = DoIO(fd, accept_f, "accept", wtsclwq::EventType::READ,
                         SO_RCVTIMEO, addr, len);
     if (flag >= 0) {
-        wtsclwq::FileDescriptorManager::GetInstancePtr()->Get(fd, true);
+        wtsclwq::FileDescriptorManager::GetInstancePtr()->Get(flag, true);
     }
     return static_cast<int>(flag);
 }

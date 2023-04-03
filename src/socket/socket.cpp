@@ -488,14 +488,14 @@ void Socket::NewSocket() {
 auto Socket::Init(int sock) -> bool {
     FileDescriptor::ptr fdp =
         FileDescriptorManager ::GetInstancePtr()->Get(sock);
-    if (fdp == nullptr || fdp->IsSocket() || !fdp->IsClosed()) {
-        return false;
+    if (fdp && fdp->IsSocket() && !fdp->IsClosed()) {
+        m_socket = sock;
+        m_is_connected = true;
+        InitSocket();
+        GetLocalAddress();
+        GetRemoteAddress();
+        return true;
     }
-    m_socket = sock;
-    m_is_connected = true;
-    InitSocket();
-    GetLocalAddress();
-    GetRemoteAddress();
-    return true;
+    return false;
 }
 }  // namespace wtsclwq

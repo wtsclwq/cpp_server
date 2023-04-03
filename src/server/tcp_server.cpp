@@ -2,7 +2,7 @@
 // Created by wtsclwq on 23-4-3.
 //
 
-#include "tcp_server.h"
+#include "../include/server/tcp_server.h"
 
 #include "../include/config/config.h"
 #include "../include/log/log_manager.h"
@@ -88,7 +88,7 @@ auto TcpServer::Start() -> bool {
 void TcpServer::StartAccept(const Socket::ptr &socket) {
     while (!m_is_stop) {
         Socket::ptr client = socket->Accept();
-        if (client) {
+        if (client != nullptr) {
             client->SetRecvTimeout(m_recv_timeout);
             m_worker->Schedule([capture0 = shared_from_this(), client] {
                 capture0->HandleClient(client);
@@ -146,6 +146,5 @@ auto TcpServer::GetRecvTimeout() const -> uint64_t { return m_recv_timeout; }
 void TcpServer::SetRecvTimeout(uint64_t recv_timeout) {
     m_recv_timeout = recv_timeout;
 }
-
 
 }  // namespace wtsclwq

@@ -292,6 +292,7 @@ void IOManager::OnIdle() {
     const int events_num{64};
     auto event_list_ptr{std::make_unique<epoll_event[]>(events_num)};
     while (true) {
+        LOG_INFO(sys_logger, "on idle");
         uint64_t next_timeout{0};
         // 由于auto_stop的组织，如果不主动调用Stop()，线程是不会在这里break结束的
         if (OnStop(next_timeout)) {

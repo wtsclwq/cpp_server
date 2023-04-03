@@ -6,8 +6,8 @@
 #include <functional>
 #include <memory>
 
-#include "../include/io/io_manager.h"
-#include "../include/socket/socket.h"
+#include "../io/io_manager.h"
+#include "../socket/socket.h"
 
 namespace wtsclwq {
 
