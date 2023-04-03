@@ -27,6 +27,7 @@ auto CharsToHttpMethod(const char* str) -> HttpMethod {
     return HttpMethod::INVALID_METHOD;
 }
 
+// 注意虽然每个string的长度可能不同，但是其实这是一个二维字符数组，因此每一行的长度相同
 static const char* s_method_string[] = {
 #define METHOD_STRING(num, name, string) #string,
     HTTP_METHOD_MAP(METHOD_STRING)

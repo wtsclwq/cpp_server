@@ -35,7 +35,6 @@ auto LogManager::GetLogger(const std::string& name) -> Logger::ptr {
 void LogManager::Init(const std::vector<LoggerConfig>& logger_config_vec) {
     ScopedLock<MutexType> lock(m_mutex);
 
-    std::cout << "清空logger map，重新逐个添加" << std::endl;
     m_logger_map.clear();
 
     for (const auto& logger_config : logger_config_vec) {

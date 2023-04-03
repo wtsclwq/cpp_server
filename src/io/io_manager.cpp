@@ -146,7 +146,8 @@ auto IOManager::AddEvent(int filedsc, EventType new_event,
     return 0;
 }
 
-[[maybe_unused]] auto IOManager::DelEvent(int filedesc, EventType event) -> bool {
+[[maybe_unused]] auto IOManager::DelEvent(int filedesc, EventType event)
+    -> bool {
     m_rwlock.ReadLock();
     if (filedesc >= m_fd_contexts_vec.size()) {
         return false;
@@ -215,7 +216,7 @@ auto IOManager::CancelEvent(int filedesc, EventType event) -> bool {
     return true;
 }
 
-auto IOManager::CancleAll(int filedesc) -> bool {
+auto IOManager::CancelAll(int filedesc) -> bool {
     m_rwlock.ReadLock();
     if (filedesc >= m_fd_contexts_vec.size()) {
         return false;
@@ -269,7 +270,7 @@ void IOManager::ContextVecResize(size_t size) {
 }
 
 void IOManager::Tickle() {
-    if (IsHasIdleThread()) {
+    if (!IsHasIdleThread()) {
         return;
     }
     size_t write_size = write(m_tickle_fds[1], "T", 1);
@@ -287,15 +288,14 @@ auto IOManager::OnStop(uint64_t& timeout) -> bool {
            Scheduler::OnStop();
 }
 
-void IOManager::OnIdle() {  // NOLINT
+void IOManager::OnIdle() {
     const int events_num{64};
-    auto event_list_ptr{std::make_unique<epoll_event[]>(events_num)};  // NOLINT
+    auto event_list_ptr{std::make_unique<epoll_event[]>(events_num)};
     while (true) {
         uint64_t next_timeout{0};
+        // 由于auto_stop的组织，如果不主动调用Stop()，线程是不会在这里break结束的
         if (OnStop(next_timeout)) {
             if (next_timeout == ~0ULL) {
-                LOG_CUSTOM_ERROR(sys_logger, "name = %s idle stoping exit",
-                                 GetName().c_str())
                 break;
             }
         }

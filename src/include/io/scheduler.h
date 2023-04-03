@@ -190,8 +190,8 @@ class Scheduler {
     size_t m_thread_count{0};                     // 线程池总线程数
     std::atomic_size_t m_active_thread_count{0};  // 活跃线程数
     std::atomic_size_t m_idle_thread_count{0};    // 空闲线程数
-    bool m_stoping{true};                         // 是否处于停止状态
-    bool m_auto_stop{false};                      // 是否自动停止
+    bool m_is_stop{true};                         // 是否处于停止状态
+    bool m_is_auto_stop{false};                   // 是否自动停止
     int m_root_thread_id{0};                      // 调度器创建者线程id
     mutable MutexType m_mutex{};
 };
@@ -216,7 +216,7 @@ void Scheduler::Schedule(InputIterator begin, InputIterator end) {
     {
         ScopedLock<MutexType> lock(m_mutex);
         while (begin != end) {
-            need_tickle = ScheduleNoLock(*begin,-1) || need_tickle;
+            need_tickle = ScheduleNoLock(*begin, -1) || need_tickle;
             ++begin;
         }
     }
@@ -237,7 +237,7 @@ auto Scheduler::ScheduleNoLock(Executable &&exec, pid_t thread_id,
         if (is_priority) {
             m_task_list.push_front(std::move(task));  // move(shared_ptr)
         } else {
-            m_task_list.push_back(std::move(task));  // move(shared_ptr)
+            m_task_list.push_back(std::move(task));   // move(shared_ptr)
         }
     }
     return need_tickle;

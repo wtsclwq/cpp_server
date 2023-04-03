@@ -409,7 +409,7 @@ auto close(int fd) -> int {
     if (fdp) {
         auto *iom = wtsclwq::IOManager::GetCurIOManager();
         if (iom != nullptr) {
-            iom->CancleAll(fd);
+            iom->CancelAll(fd);
         }
         wtsclwq::FileDescriptorManager::GetInstancePtr()->Remove(fd);
     }

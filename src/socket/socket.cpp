@@ -463,7 +463,7 @@ auto Socket::CancelAccept() -> bool {
 }
 
 auto Socket::CancelAll() -> bool {
-    return IOManager::GetCurIOManager()->CancleAll(m_socket);
+    return IOManager::GetCurIOManager()->CancelAll(m_socket);
 }
 
 void Socket::InitSocket() {

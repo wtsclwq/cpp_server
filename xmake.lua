@@ -46,6 +46,10 @@ target("http")
     set_kind("shared")
     add_files("src/http/*.cpp")
 
+target("server")
+    set_kind("shared")
+    add_files("src/server/*.cpp")
+
 target("io_manager_test")
     set_kind("binary")
     add_files("test/io_manager_test.cpp")
@@ -65,6 +69,16 @@ target("serialize_test")
     set_kind("binary")
     add_files("test/serialize_test.cpp")
     add_deps("serialize","socket","log","util","config","concurrency","timer","io")
+
+target("http_test")
+    set_kind("binary")
+    add_files("test/http_test.cpp")
+    add_deps("http","serialize","socket","log","util","config","concurrency","timer","io")
+
+target("parser_test")
+    set_kind("binary")
+    add_files("test/parser_test.cpp")
+    add_deps("http","serialize","socket","log","util","config","concurrency","timer","io")
 
 
 --

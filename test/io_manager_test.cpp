@@ -123,7 +123,8 @@ auto main() -> int {
     // test1();
     // test_timer();
     // test_hook();
-    wtsclwq::IOManager iom(1, true, "aaa");
-    iom.Schedule(TestSock);
+    //    TestTimer();
+    wtsclwq::IOManager iom(2, false,"aaa");
+    std::this_thread::sleep_for(std::chrono::seconds (10));
     return 0;
 }

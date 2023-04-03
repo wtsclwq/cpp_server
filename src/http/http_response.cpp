@@ -114,6 +114,10 @@ auto HttpResponse::GetBody() const -> const std::string & { return m_body; }
 
 void HttpResponse::SetBody(const std::string &body) { m_body = body; }
 
+void HttpResponse::AppendBody(const std::string &value) {
+    m_body.append(value);
+}
+
 auto HttpResponse::GetReason() const -> const std::string & { return m_reason; }
 
 void HttpResponse::SetReason(const std::string &reason) { m_reason = reason; }

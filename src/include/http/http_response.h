@@ -114,6 +114,8 @@ class HttpResponse {
 
     void SetBody(const std::string& m_body);
 
+    void AppendBody(const std::string& value);
+
     auto GetReason() const -> const std::string&;
 
     void SetReason(const std::string& m_reason);

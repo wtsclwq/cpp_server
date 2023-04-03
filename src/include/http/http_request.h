@@ -236,6 +236,8 @@ class HttpRequest {
 
     auto GetBody() const -> const std::string&;
 
+    void AppendBody(const std::string& value);
+
     void SetBody(const std::string& body);
 
     auto GetHeaders() const -> const MappingType&;

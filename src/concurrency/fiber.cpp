@@ -56,8 +56,6 @@ Fiber::Fiber()
     int flag = getcontext(&m_ctx);
     WTSCLWQ_ASSERT(flag == 0, "getcontext error");
     ++fiber_info::s_fiber_count;
-
-    LOG_CUSTOM_DEBUG(sys_logger, "协程 %lu 创建成功", m_id);
 }
 
 Fiber::Fiber(std::function<void()> call_back, size_t stack_size)
@@ -76,7 +74,6 @@ Fiber::Fiber(std::function<void()> call_back, size_t stack_size)
     m_ctx.uc_stack.ss_sp = m_stack;            // 设置栈空间
     m_ctx.uc_stack.ss_size = m_stack_size;     // 设置栈大小
     makecontext(&m_ctx, &Fiber::MainFunc, 0);  // 关联上下文和方法
-    LOG_CUSTOM_DEBUG(sys_logger, "协程 %lu 创建成功", m_id);
 }
 
 Fiber::~Fiber() {
@@ -98,7 +95,6 @@ Fiber::~Fiber() {
             SetCurFiber(nullptr);
         }
     }
-    LOG_CUSTOM_DEBUG(sys_logger, "协程 %lu 析构成功", m_id);  // NOLINT
 }
 
 void Fiber::Reset(std::function<void()> call_back) {
@@ -218,7 +214,6 @@ void Fiber::YieldToHoldBackScheduler() {
 auto Fiber::TotalFibers() -> uint64_t { return fiber_info::s_fiber_count; }
 
 void Fiber::MainFunc() {
-    LOG_DEBUG(sys_logger, "Fiber MainFunc begin");
     Fiber::ptr cur_smart_ptr = GetCurFiber();
     WTSCLWQ_ASSERT(cur_smart_ptr != nullptr, "current fiber is nullptr");
     try {
@@ -246,14 +241,8 @@ void Fiber::MainFunc() {
     //                只有创建者线程的t_scheduler_fiber才需要swap回t_main_fiber
     // （如果use_caller=false,那么scheduler->m_root_fiber.get()应该是nullptr）
     if (scheduler == nullptr || scheduler->m_root_fiber.get() == cur_raw_ptr) {
-        LOG_CUSTOM_DEBUG(sys_logger, "线程%d协程%lu结束", GetThreadId(),
-                         cur_raw_ptr->m_id);
-        LOG_DEBUG(sys_logger, "Fiber MainFunc end");
         cur_raw_ptr->SwapOut();
     } else {
-        LOG_CUSTOM_DEBUG(sys_logger, "线程%d协程%lu结束", GetThreadId(),
-                         cur_raw_ptr->m_id);
-        LOG_DEBUG(sys_logger, "Fiber MainFunc end");
         cur_raw_ptr->SwapOutBackScheduler();
     }
     WTSCLWQ_ASSERT(false, "永不到达");

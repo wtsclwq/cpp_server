@@ -142,6 +142,11 @@ auto HttpRequest::CreateRespense() -> std::shared_ptr<HttpResponse> {
 }
 
 auto HttpRequest::Dump(std::ostream& os) const -> std::ostream& {
+    // 1.请求行 GET /uri HTTP/1.1
+    // uri格式:<scheme>://<host>:<port>/<path> ?<query> #<fragment>
+    // Host举例:www.baidu.com
+    // 2.请求头 key:value\r\n
+    // 3.请求体 <length>\r\n <content>
     os << HttpMethodToString(m_method) << " " << m_path
        << (m_query.empty() ? "" : "?") << m_query
        << (m_fragment.empty() ? "" : "#") << m_fragment << " HTTP/"
@@ -152,6 +157,7 @@ auto HttpRequest::Dump(std::ostream& os) const -> std::ostream& {
            << "\r\n";
     }
     for (auto& i : m_headers) {
+        // 非websocket的connection项已经在面处理过了
         if (!m_is_websocket && strcasecmp(i.first.c_str(), "connection") == 0) {
             continue;
         }
@@ -211,6 +217,8 @@ void HttpRequest::SetFragment(const std::string& fragment) {
 auto HttpRequest::GetBody() const -> const std::string& { return m_body; }
 
 void HttpRequest::SetBody(const std::string& body) { m_body = body; }
+
+void HttpRequest::AppendBody(const std::string& value) { m_body.append(value); }
 
 auto HttpRequest::GetHeaders() const -> const HttpRequest::MappingType& {
     return m_headers;

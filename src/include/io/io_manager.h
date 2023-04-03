@@ -62,7 +62,7 @@ class IOManager : public Scheduler, public TimerManager {
                   std::function<void()> callback = nullptr) -> int;
     [[maybe_unused]] auto DelEvent(int filedesc, EventType event) -> bool;
     auto CancelEvent(int filedesc, EventType event) -> bool;
-    auto CancleAll(int filedesc) -> bool;
+    auto CancelAll(int filedesc) -> bool;
 
     static auto GetCurIOManager() -> IOManager *;
 
