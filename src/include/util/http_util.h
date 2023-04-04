@@ -30,7 +30,7 @@ struct CaseInsensitiveLess {
  *      @retval false 不存在或者转换失败 val = def
  */
 template <class MapType, class T>
-auto CheckGetWithDef(const MapType& m, const std::string& key, T& val,
+auto CheckGetWithDefAs(const MapType& m, const std::string& key, T& val,
                      const T& def = T()) -> bool {
     auto it = m.find(key);
     if (it == m.end()) {
@@ -54,7 +54,7 @@ auto CheckGetWithDef(const MapType& m, const std::string& key, T& val,
  * @return 如果存在且转换成功返回对应的值,否则返回默认值
  */
 template <class MapType, class T>
-auto GetWithDef(const MapType& m, const std::string& key, const T& def = T())
+auto GetWithDefAs(const MapType& m, const std::string& key, const T& def = T())
     -> T {
     auto it = m.find(key);
     if (it == m.end()) {

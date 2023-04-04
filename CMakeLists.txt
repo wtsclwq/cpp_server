@@ -172,7 +172,7 @@ target_sources(config PRIVATE
 # target
 set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
-add_library(http SHARED "")
+add_library(http SHARED "" src/http/http_session.cpp src/include/http/http_session.h)
 set_target_properties(http PROPERTIES OUTPUT_NAME "http")
 set_target_properties(http PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
 target_include_directories(http PRIVATE
@@ -515,7 +515,7 @@ target_sources(parser_test PRIVATE
 # target
 set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
-add_library(serialize SHARED "")
+add_library(serialize SHARED "" src/serialize/stream.cpp)
 set_target_properties(serialize PROPERTIES OUTPUT_NAME "serialize")
 set_target_properties(serialize PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
 target_include_directories(serialize PRIVATE
@@ -675,7 +675,7 @@ target_sources(server PRIVATE
 # target
 set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
-add_library(socket SHARED "")
+add_library(socket SHARED "" src/include/serialize/stream.h src/include/socket/socket_stream.h src/socket/socket_stream.cpp)
 set_target_properties(socket PROPERTIES OUTPUT_NAME "socket")
 set_target_properties(socket PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
 target_include_directories(socket PRIVATE

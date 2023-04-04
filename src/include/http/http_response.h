@@ -87,7 +87,7 @@ class HttpResponse {
      * @param os 要倒入的stream
      * @return 倒入后的stream
      */
-    auto Dump(std::ostream& os) -> std::ostream&;
+    auto Dump(std::ostream& os) const -> std::ostream&;
 
     /**
      * @brief 返回可读字符串
@@ -140,11 +140,15 @@ class HttpResponse {
 };
 template <typename T>
 auto HttpResponse::CheckAndGetHeaderWithDefAs(const std::string& key, T& val,
-                                              const T& def) -> bool {}
+                                              const T& def) -> bool {
+    return CheckGetWithDefAs(m_headers, key, val, def);
+}
 
 template <typename T>
 auto HttpResponse::GetHeaderWithDefAs(const std::string& key, const T& def)
-    -> T {}
+    -> T {
+    return GetWithDefAs(m_headers, key, def);
+}
 
 auto operator<<(std::ostream& os, const HttpResponse& response)
     -> std::ostream&;

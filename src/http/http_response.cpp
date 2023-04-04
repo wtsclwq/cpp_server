@@ -56,7 +56,7 @@ void HttpResponse::SetCookie(const std::string &key, const std::string &val,
     m_cookies.push_back(ss.str());
 }
 
-auto HttpResponse::Dump(std::ostream &os) -> std::ostream & {
+auto HttpResponse::Dump(std::ostream &os) const -> std::ostream & {
     os << "HTTP/" << ((uint32_t)(m_version >> 4)) << "."
        << ((uint32_t)(m_version & 0x0F)) << " " << (uint32_t)m_status << " "
        << (m_reason.empty() ? HttpStatusToString(m_status) : m_reason)
@@ -136,5 +136,10 @@ auto HttpResponse::GetCookies() const -> const std::vector<std::string> & {
 
 void HttpResponse::SetCookies(const std::vector<std::string> &cookies) {
     m_cookies = cookies;
+}
+
+auto operator<<(std::ostream &os, const HttpResponse &response)
+    -> std::ostream & {
+    return response.Dump(os);
 }
 }  // namespace wtsclwq

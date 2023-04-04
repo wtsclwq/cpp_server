@@ -270,13 +270,13 @@ class HttpRequest {
 template <typename T>
 auto HttpRequest::CheckAndGetHeaderWithDefAs(const std::string& key, T& val,
                                              const T& def) -> bool {
-    return CheckGetWithDef(m_headers, key, val, def);
+    return CheckGetWithDefAs(m_headers, key, val, def);
 }
 
 template <typename T>
 auto HttpRequest::GetHeaderWithDefAs(const std::string& key, const T& def)
     -> T {
-    return GetWithDef(m_headers, key, def);
+    return GetWithDefAs(m_headers, key, def);
 }
 
 template <typename T>
@@ -284,27 +284,27 @@ auto HttpRequest::CheckAndGetParamWithDefAs(const std::string& key, T& val,
                                             const T& def) -> bool {
     InitQueryParam();
     InitBodyParam();
-    return CheckGetWithDef(m_params, key, val, def);
+    return CheckGetWithDefAs(m_params, key, val, def);
 }
 
 template <typename T>
 auto HttpRequest::GetParamWithDefAs(const std::string& key, const T& def) {
     InitQueryParam();
     InitBodyParam();
-    return GetWithDef(m_params, key, def);
+    return GetWithDefAs(m_params, key, def);
 }
 
 template <typename T>
 auto HttpRequest::CheckAndGetCookieWithDefAs(const std::string& key, T& val,
                                              const T& def) -> bool {
     InitCookies();
-    return CheckGetWithDef(m_cookies, key, val, def);
+    return CheckGetWithDefAs(m_cookies, key, val, def);
 }
 
 template <typename T>
 auto HttpRequest::GetCookieWithDefAs(const std::string& key, const T& def) {
     InitCookies();
-    return GetWithDef(m_cookies, key, def);
+    return GetWithDefAs(m_cookies, key, def);
 }
 auto operator<<(std::ostream& os, const HttpRequest& request) -> std::ostream&;
 }  // namespace wtsclwq
