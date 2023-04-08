@@ -96,14 +96,14 @@ static auto DoIO(int fd, OriginFunc func, const char *hook_func_name,  // NOLINT
 
     wtsclwq::FileDescriptor::ptr fdp =
         wtsclwq::FileDescriptorManager::GetInstancePtr()->Get(fd);
-    if (!fdp) {
+    if (fdp == nullptr) {
         return func(fd, std::forward<Args>(args)...);
     }
     if (fdp->IsClosed()) {
         errno = EBADF;
         return -1;
     }
-    // 如果用户自己设置了非阻塞，可能是有自己的用途
+    // 只hook socket上的io,并且如果用户自己设置了非阻塞，可能是有自己的用途
     if (!fdp->IsSocket() || fdp->GetUserNonBlock()) {
         return func(fd, std::forward<Args>(args)...);
     }
@@ -122,7 +122,7 @@ RETRY:
     // 说明在阻塞状态,直接把这个fd 丢到 IOManager 里监听对应事件,
     // 等到事件触发后再返回当前协程上下文继续尝试
     if (flag == -1 && errno == EAGAIN) {
-        auto *iom = wtsclwq::IOManager::GetCurIOManager();
+        auto *iom = wtsclwq::IOManager::GetThisThreadIOManager();
         wtsclwq::Timer::ptr timer;
         std::weak_ptr<TimerInfo> timer_info_wp(timer_info);
         // 如果设置了超时时间，在指定时间后取消掉该 fd 的事件监听
@@ -140,6 +140,7 @@ RETRY:
                     if (!time_condition || time_condition->cancelled != 0) {
                         return;
                     }
+                    // 当定时器任务执行到这里时，说明io已经超时了，将条件变量设置为ETIMEDOUT
                     time_condition->cancelled = ETIMEDOUT;
                     iom->CancelEvent(fd,
                                      static_cast<wtsclwq::EventType>(event));
@@ -147,7 +148,7 @@ RETRY:
                 timer_info_wp);
         }
         //
-        // 如果事件触发就回到这里,因为第三个参数不设置的话,事件的回调默认是回到cur_fiber
+        // 如果事件触发就回到这里,因为第三个参数不设置的话,事件的回调默认是回到添加事件的协程
         int ret = iom->AddEvent(fd, static_cast<wtsclwq::EventType>(event));
         if (ret == -1) {
             LOG_CUSTOM_ERROR(wtsclwq::sys_logger, "%s addEventListener(%d, %u)",
@@ -157,23 +158,21 @@ RETRY:
             }
             return -1;
         }
-
+        // 添加定时器和事件监听后，让出CPU还给调度协程，等待回到此处
+        wtsclwq::Fiber::GetCurFiber()->Yield();
         // 有两种情况可以回到这里:
-        // 1.定时器任务执行完,在定时器中执行事件的Cancel,然后强制事件回调触发==>超时
-        // 2.iomanager.idle中触发, 正常完成事件回调触发==>正常
-        wtsclwq::Fiber::YieldToHoldBackScheduler();
+        // 1.iomanager.OnIdle()中监听到事件, 正常完成回调==>正常
+        // 2.定时器任务执行完,在定时器中执行事件的Cancel,然后强制事件回调==>超时==>报错
         if (timer) {
             timer->Cancel();
         }
-        // 上面的情况2,发生超时,直接返回-1
+        // 上述情况2
         if (timer_info->cancelled != 0) {
             errno = timer_info->cancelled;
             return -1;
         }
-        goto RETRY;  // NOLINT
+        goto RETRY;
     }
-    LOG_CUSTOM_DEBUG(wtsclwq::sys_logger, "DoIO end errno %d, flag = %d", errno,
-                     flag);
     return flag;
 }
 
@@ -193,11 +192,11 @@ auto sleep(unsigned int seconds) -> unsigned int {
         return sleep_f(seconds);
     }
     wtsclwq::Fiber::ptr fiber = wtsclwq::Fiber::GetCurFiber();
-    auto *iom = wtsclwq::IOManager::GetCurIOManager();
+    auto *iom = wtsclwq::IOManager::GetThisThreadIOManager();
     WTSCLWQ_ASSERT(iom != nullptr, "这里的 IOManager 指针不可为空");
     iom->AddTimer(static_cast<uint64_t>(seconds) * BASE_NUMBER_OF_SECONDS,
                   [iom, fiber]() { iom->Schedule(fiber); });
-    wtsclwq::Fiber::YieldToHoldBackScheduler();
+    wtsclwq::Fiber::GetCurFiber()->Yield();
     return 0;
 }
 
@@ -209,11 +208,11 @@ auto usleep(useconds_t useconds) -> int {
         return usleep_f(useconds);
     }
     wtsclwq::Fiber::ptr fiber = wtsclwq::Fiber::GetCurFiber();
-    auto *iom = wtsclwq::IOManager::GetCurIOManager();
+    auto *iom = wtsclwq::IOManager::GetThisThreadIOManager();
     WTSCLWQ_ASSERT(iom != nullptr, "这里的 IOManager 指针不可为空");
     iom->AddTimer(static_cast<uint64_t>(useconds) / BASE_NUMBER_OF_SECONDS,
                   [iom, fiber]() { iom->Schedule(fiber); });
-    wtsclwq::Fiber::YieldToHoldBackScheduler();
+    wtsclwq::Fiber::GetCurFiber()->Yield();
     return 0;
 }
 
@@ -226,10 +225,10 @@ auto nanosleep(const struct timespec *requested_time,
                           requested_time->tv_nsec / BASE_NUMBER_OF_SECONDS /
                               BASE_NUMBER_OF_SECONDS;
     wtsclwq::Fiber::ptr fiber = wtsclwq::Fiber::GetCurFiber();
-    auto *iom = wtsclwq::IOManager::GetCurIOManager();
+    auto *iom = wtsclwq::IOManager::GetThisThreadIOManager();
     WTSCLWQ_ASSERT(iom != nullptr, "这里的 IOManager 指针不可为空");
     iom->AddTimer(timeout_ms, [iom, fiber]() { iom->Schedule(fiber); });
-    wtsclwq::Fiber::YieldToHoldBackScheduler();
+    wtsclwq::Fiber::GetCurFiber()->Yield();
     return 0;
 }
 
@@ -279,7 +278,7 @@ auto ConnectWithTimeout(int sockfd, const struct sockaddr *addr,  // NOLINT
      * connect 仍旧在进行还没有完成。 下一步就需要为其添加 write
      * 事件监听，当连接成功后会触发该事件。
      */
-    auto *iom = wtsclwq::IOManager::GetCurIOManager();
+    auto *iom = wtsclwq::IOManager::GetThisThreadIOManager();
     wtsclwq::Timer::ptr timer;
     auto timer_info = std::make_shared<TimerInfo>();
     std::weak_ptr<TimerInfo> weak_timer_info(timer_info);
@@ -300,7 +299,7 @@ auto ConnectWithTimeout(int sockfd, const struct sockaddr *addr,  // NOLINT
 
     int ret = iom->AddEvent(sockfd, wtsclwq::EventType::WRITE);
     if (ret == 0) {
-        wtsclwq::Fiber::YieldToHoldBackScheduler();
+        wtsclwq::Fiber::GetCurFiber()->Yield();
         if (timer) {
             timer->Cancel();
         }
@@ -403,7 +402,7 @@ auto close(int fd) -> int {
     wtsclwq::FileDescriptor::ptr fdp =
         wtsclwq::FileDescriptorManager::GetInstancePtr()->Get(fd);
     if (fdp) {
-        auto *iom = wtsclwq::IOManager::GetCurIOManager();
+        auto *iom = wtsclwq::IOManager::GetThisThreadIOManager();
         if (iom != nullptr) {
             iom->CancelAll(fd);
         }

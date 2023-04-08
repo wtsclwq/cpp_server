@@ -15,8 +15,8 @@ static ConfigVar<uint64_t>::ptr g_tcp_server_read_timeout =
 
 TcpServer::TcpServer()
     : m_name("wtsclwq/1.0"), m_type("TCP"), m_is_stop(true), m_recv_timeout(),
-      m_worker(IOManager::GetCurIOManager()),
-      m_acceptor(IOManager::GetCurIOManager()) {}
+      m_worker(IOManager::GetThisThreadIOManager()),
+      m_acceptor(IOManager::GetThisThreadIOManager()) {}
 
 TcpServer::TcpServer(IOManager *worker, IOManager *acceptor)
     : m_name("wtsclwq/1.0"), m_type("TCP"), m_is_stop(true), m_recv_timeout(),

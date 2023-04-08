@@ -22,13 +22,13 @@ class Fiber : public std::enable_shared_from_this<Fiber> {
   public:
     using ptr = std::shared_ptr<Fiber>;
 
-    enum State { INIT, HOLD, EXEC, TERM, READY, EXCEPT };
+    enum State { EXEC, TERM, READY };
 
   private:
     /**
      * @description:
      * 每个线程中*第一个*协程的构造函数，也就是主协程。
-     * 主协程的ID必定为0,且不需要新建栈空间，运行状态默认为EXEC
+     * 主协程的ID必定为0,且不需要新建栈空间，运行状态为EXEC
      */
     Fiber();
 
@@ -44,7 +44,8 @@ class Fiber : public std::enable_shared_from_this<Fiber> {
      * @param {function<void()>} call_back 新协程要执行的函数
      * @param {size_t} stack_size 协程栈大小
      */
-    explicit Fiber(std::function<void()> call_back, size_t stack_size = 0);
+    explicit Fiber(std::function<void()> call_back, size_t stack_size = 0,
+                   bool run_in_scheduler = true);
 
     /**
      * @description: 析构函数，分类判断：
@@ -60,22 +61,17 @@ class Fiber : public std::enable_shared_from_this<Fiber> {
     void Reset(std::function<void()> call_back);
 
     /**
-     * @description: 将this协程上升为cur协程，并与main协程互换上下文。
-     * 注意：当前协程模型只允许从主协程切换到子协程执行，
-     *      因此子协程对象执行SwapIn()时，cur协程必定为主协程
-     * @return {*}
+     * @brief
+     * 将cur协程(调度协程或主协程)上下文存储起来，然后加载this协程上下文，
+     * 前者READY(在它自己的逻辑中),后者EXEC(在该方法的逻辑中)
      */
-    void SwapIn();
-
-    void SwapInFromScheduler();
+    void Resume();
 
     /**
-     * @description: 将this协程切换到后台，让主协程重回cur协程
-     * @return {*}
+     * @brief 将this协程上下文存储起来，然后加载调度协程或者主协程上下文，
+     * 前者READY,后者EXEC
      */
-    void SwapOut();
-
-    void SwapOutBackScheduler();
+    void Yield();
 
     /**
      * @description: 设置正在运行的协程为@param
@@ -104,18 +100,6 @@ class Fiber : public std::enable_shared_from_this<Fiber> {
     static auto GetCurFiber() -> Fiber::ptr;
 
     /**
-     * @description: 将当前协程设置为Ready,切换回主协程
-     */
-    static void YieldToReady();
-
-    /**
-     * @description: 将当前协程设置为Hold,切换回主协程
-     */
-    static void YieldToHold();
-
-    static void YieldToHoldBackScheduler();
-
-    /**
      * @description: 获取当前协程ID
      * @return {uint64_t} this->m_id
      */
@@ -139,5 +123,6 @@ class Fiber : public std::enable_shared_from_this<Fiber> {
     State m_state;                      // 协程运行状态
     ucontext_t m_ctx{};                 // 用户态上下文
     std::function<void()> m_call_back;  // 回调函数
+    bool m_running_in_scheduler;        // 是否由调度器支配
 };
 }  // namespace wtsclwq

@@ -201,9 +201,9 @@ void TimerManager::ListExpiredCallbacks(
 
 auto TimerManager::DetectClockRollover(uint64_t now_ms) -> bool {
     // 系统时间被回拨超过一个小时
-    const int ROLLOVER_TIME = 60 * 60 * 1000;
+    const int rollover_time = 60 * 60 * 1000;
     bool rollover = now_ms < m_previous_exe_time &&
-                    now_ms < (m_previous_exe_time - ROLLOVER_TIME);
+                    now_ms < (m_previous_exe_time - rollover_time);
     m_previous_exe_time = now_ms;
     return rollover;
 }

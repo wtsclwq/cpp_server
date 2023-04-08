@@ -15,9 +15,9 @@
 #include <utility>
 #include <vector>
 
-#include "../concurrency/fiber.h"
-#include "../concurrency/lock.h"
-#include "../concurrency/thread.h"
+#include "fiber.h"
+#include "lock.h"
+#include "thread.h"
 namespace wtsclwq {
 class Scheduler {
   public:
@@ -37,29 +37,12 @@ class Scheduler {
      * @return {*}
      */
     explicit Scheduler(size_t thread_num = 1, bool use_caller = true,
-                       std::string name = "");
+                       std::string name = "scheduler");
 
     virtual ~Scheduler();
 
-    [[nodiscard]] auto GetName() const -> std::string;
+    auto GetName() const -> std::string;
 
-    [[nodiscard]] auto GetActiveThreadCount() const -> size_t;
-
-    void SetActiveThreadCount(size_t count);
-
-    [[nodiscard]] auto IsHasIdleThread() const -> bool;
-
-    void SetIdleThreadCount(size_t count);
-
-    [[nodiscard]] auto IsAutoStoping() const -> bool;
-
-    void SetIsAutoStoping(bool is_auto_stop);
-
-    [[nodiscard]] auto GetRootThreadId() const -> pid_t;
-
-    void SetRootThreadId(pid_t thread_id);
-
-    [[nodiscard]] auto GetMutex() const -> MutexType &;
 
     /**
      * @description: 获取当前线程内调度器指针
@@ -89,7 +72,7 @@ class Scheduler {
      * @description: 调度器是否有空闲的线程
      * @return {*}
      */
-    [[nodiscard]] auto HasIdleThread() const -> bool;
+    auto HasIdleThread() const -> bool;
 
     /**
      * @description: 添加任务 thread-safe
@@ -132,7 +115,6 @@ class Scheduler {
      * !重载多个构造函数,搭配模板使用,根据传入参数的不同,可以构建不同的任务对象
      */
     struct Task {
-      public:
         Task(const Task &) = default;
         auto operator=(const Task &) -> Task & = default;
         Task(Task &&) = delete;
@@ -183,6 +165,7 @@ class Scheduler {
     void Run();
 
     std::string m_name{};                         // 调度器名称
+    bool m_is_use_builder;                        // 是否使用创建者线程
     std::vector<Thread::ptr> m_threads_vec{};     // 线程池
     std::list<Task::ptr> m_task_list{};           // 任务队列
     std::vector<int> m_thread_id_vec{};           // 线程id集合

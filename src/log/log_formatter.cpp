@@ -55,15 +55,15 @@ auto LogFormatter::Format(const LogEvent::ptr& log_event) -> std::string {
 }
 
 void LogFormatter::Init() {
-    enum PARSE_STATUS {
+    enum ParseStatus {
         SCAN_STATUS,    // 扫描普通字符
         CREATE_STATUS,  // 扫描到 %，处理占位符
     };
-    PARSE_STATUS STATUS = SCAN_STATUS;
+    ParseStatus status = SCAN_STATUS;
     size_t str_begin = 0;
     size_t str_end = 0;
     for (size_t i = 0; i < m_pattern.length(); i++) {
-        switch (STATUS) {
+        switch (status) {
             // 普通扫描分支，将扫描到普通字符串创建对应的普通字符处理对象后填入m_format_item_list中
             case SCAN_STATUS:
                 str_begin = i;  // 扫描记录普通字符的开始结束位置
@@ -71,7 +71,7 @@ void LogFormatter::Init() {
                     // 扫描到 % 结束普通字符串查找，将 STATUS
                     // 赋值为占位符处理状态，等待后续处理后进入占位符处理状态
                     if (m_pattern[str_end] == '%') {
-                        STATUS = CREATE_STATUS;
+                        status = CREATE_STATUS;
                         break;
                     }
                 }
@@ -89,7 +89,7 @@ void LogFormatter::Init() {
                 } else {
                     m_items.push_back(iter->second);
                 }
-                STATUS = SCAN_STATUS;
+                status = SCAN_STATUS;
                 break;
         }
     }

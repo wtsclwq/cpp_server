@@ -15,8 +15,8 @@
 
 #include "../concurrency/fiber.h"
 #include "../concurrency/lock.h"
+#include "../concurrency/scheduler.h"
 #include "../timer/timer.h"
-#include "scheduler.h"
 
 namespace wtsclwq {
 enum EventType { NONE = 0x0, READ = 0x1, WRITE = 0x4 };
@@ -42,7 +42,7 @@ class IOManager : public Scheduler, public TimerManager {
         auto GetEventHandler(EventType event) -> EventHandler &;
         static void ResetEventHandler(EventHandler &handler);
         void TriggerEvent(EventType event);
-        int filedsc{};                 // 要监听的fd
+        int filedesc{};                 // 要监听的fd
         EventHandler read_handler{};   // 读事件的handler
         EventHandler write_handler{};  // 写事件的handler
         EventType events{NONE};        // 已经注册的事件
@@ -60,11 +60,11 @@ class IOManager : public Scheduler, public TimerManager {
      */
     auto AddEvent(int filedsc, EventType new_event,
                   std::function<void()> callback = nullptr) -> int;
-    [[maybe_unused]] auto DelEvent(int filedesc, EventType event) -> bool;
+    [[maybe_unused]] [[maybe_unused]] auto DelEvent(int filedesc, EventType event) -> bool;
     auto CancelEvent(int filedesc, EventType event) -> bool;
     auto CancelAll(int filedesc) -> bool;
 
-    static auto GetCurIOManager() -> IOManager *;
+    static auto GetThisThreadIOManager() -> IOManager *;
 
   private:
     void Tickle() override;

@@ -114,8 +114,67 @@ target_link_options(concurrency PRIVATE
         )
 target_sources(concurrency PRIVATE
         src/concurrency/thread.cpp
+        src/concurrency/scheduler.cpp
         src/concurrency/semaphore.cpp
         src/concurrency/fiber.cpp
+        )
+
+# target
+set(CMAKE_C_COMPILER "/usr/bin/clang")
+set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+add_executable(concurrency_test "")
+set_target_properties(concurrency_test PROPERTIES OUTPUT_NAME "concurrency_test")
+set_target_properties(concurrency_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
+add_dependencies(concurrency_test log util config concurrency io timer)
+target_include_directories(concurrency_test PRIVATE
+        /home/wtsclwq/.xmake/packages/b/boost/1.81.0/f9de8b04e29c494587e2d3e3c7627877/include
+        /home/wtsclwq/.xmake/packages/y/yaml-cpp/0.7.0/d02abb58a6cb4e8fab7071bfdba1e372/include
+        )
+target_compile_options(concurrency_test PRIVATE
+        $<$<COMPILE_LANGUAGE:C>:-m64>
+        $<$<COMPILE_LANGUAGE:CXX>:-m64>
+        )
+set_target_properties(concurrency_test PROPERTIES CXX_EXTENSIONS OFF)
+target_compile_features(concurrency_test PRIVATE cxx_std_17)
+if (MSVC)
+    target_compile_options(concurrency_test PRIVATE $<$<CONFIG:Debug>:-Od>)
+else ()
+    target_compile_options(concurrency_test PRIVATE -O0)
+endif ()
+if (MSVC)
+    target_compile_options(concurrency_test PRIVATE -Zi)
+else ()
+    target_compile_options(concurrency_test PRIVATE -g)
+endif ()
+if (MSVC)
+    set_property(TARGET concurrency_test PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif ()
+target_link_libraries(concurrency_test PRIVATE
+        boost_atomic-mt
+        boost_filesystem-mt
+        bz2
+        z
+        yaml-cpp
+        log
+        util
+        config
+        concurrency
+        io
+        timer
+        pthread
+        dl
+        )
+target_link_directories(concurrency_test PRIVATE
+        /home/wtsclwq/.xmake/packages/b/boost/1.81.0/f9de8b04e29c494587e2d3e3c7627877/lib
+        /home/wtsclwq/.xmake/packages/y/yaml-cpp/0.7.0/d02abb58a6cb4e8fab7071bfdba1e372/lib
+        build/linux/x86_64/debug
+        )
+target_link_options(concurrency_test PRIVATE
+        -m64
+        )
+target_sources(concurrency_test PRIVATE
+        test/concurrency_test.cpp
         )
 
 # target
@@ -172,7 +231,7 @@ target_sources(config PRIVATE
 # target
 set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
-add_library(http SHARED "" src/http/http_session.cpp src/include/http/http_session.h)
+add_library(http SHARED "")
 set_target_properties(http PROPERTIES OUTPUT_NAME "http")
 set_target_properties(http PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
 target_include_directories(http PRIVATE
@@ -220,6 +279,7 @@ target_sources(http PRIVATE
         src/http/http_response.cpp
         src/http/parser.cpp
         src/http/http_parser.cpp
+        src/http/http_session.cpp
         src/http/http_method.cpp
         src/http/http_status.cpp
         )
@@ -333,7 +393,6 @@ target_link_options(io PRIVATE
         )
 target_sources(io PRIVATE
         src/io/io_manager.cpp
-        src/io/scheduler.cpp
         src/io/hook.cpp
         src/io/fd_manager.cpp
         )
@@ -515,7 +574,7 @@ target_sources(parser_test PRIVATE
 # target
 set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
-add_library(serialize SHARED "" src/serialize/stream.cpp)
+add_library(serialize SHARED "")
 set_target_properties(serialize PROPERTIES OUTPUT_NAME "serialize")
 set_target_properties(serialize PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
 target_include_directories(serialize PRIVATE
@@ -559,6 +618,8 @@ target_link_options(serialize PRIVATE
         -m64
         )
 target_sources(serialize PRIVATE
+        src/serialize/socket_stream.cpp
+        src/serialize/stream.cpp
         src/serialize/byte_array.cpp
         )
 
@@ -675,7 +736,7 @@ target_sources(server PRIVATE
 # target
 set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
-add_library(socket SHARED "" src/include/serialize/stream.h src/include/socket/socket_stream.h src/socket/socket_stream.cpp)
+add_library(socket SHARED "")
 set_target_properties(socket PROPERTIES OUTPUT_NAME "socket")
 set_target_properties(socket PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
 target_include_directories(socket PRIVATE
@@ -738,7 +799,7 @@ set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 add_executable(socket_test "")
 set_target_properties(socket_test PROPERTIES OUTPUT_NAME "socket_test")
 set_target_properties(socket_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/linux/x86_64/debug")
-add_dependencies(socket_test socket log util config concurrency timer io)
+add_dependencies(socket_test socket log util config concurrency timer io serialize)
 target_include_directories(socket_test PRIVATE
         /home/wtsclwq/.xmake/packages/b/boost/1.81.0/f9de8b04e29c494587e2d3e3c7627877/include
         /home/wtsclwq/.xmake/packages/y/yaml-cpp/0.7.0/d02abb58a6cb4e8fab7071bfdba1e372/include
@@ -776,6 +837,7 @@ target_link_libraries(socket_test PRIVATE
         concurrency
         timer
         io
+        serialize
         pthread
         dl
         )

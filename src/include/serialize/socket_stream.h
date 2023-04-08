@@ -4,8 +4,8 @@
 
 #pragma once
 #include "../concurrency/lock.h"
-#include "../serialize/stream.h"
-#include "socket.h"
+#include "../socket/socket.h"
+#include "stream.h"
 
 namespace wtsclwq {
 

@@ -34,13 +34,13 @@ void TestFiber() {
         if (errno == EINPROGRESS) {
             LOG_CUSTOM_INFO(logger, "add event errno = %s", strerror(errno));
 
-            wtsclwq::IOManager::GetCurIOManager()->AddEvent(
+            wtsclwq::IOManager::GetThisThreadIOManager()->AddEvent(
                 sock, wtsclwq::READ, []() { LOG_INFO(logger, "READ"); });
 
-            wtsclwq::IOManager::GetCurIOManager()->AddEvent(
+            wtsclwq::IOManager::GetThisThreadIOManager()->AddEvent(
                 sock, wtsclwq::WRITE, [sock]() {
                     LOG_INFO(logger, "WRITE");
-                    wtsclwq::IOManager::GetCurIOManager()->CancelEvent(
+                    wtsclwq::IOManager::GetThisThreadIOManager()->CancelEvent(
                         sock, wtsclwq::READ);
                 });
         } else {

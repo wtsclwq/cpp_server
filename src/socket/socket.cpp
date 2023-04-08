@@ -451,19 +451,19 @@ auto Socket::GetError() const -> int {
 }
 
 auto Socket::CancelRead() -> bool {
-    return IOManager::GetCurIOManager()->CancelEvent(m_socket, wtsclwq::READ);
+    return IOManager::GetThisThreadIOManager()->CancelEvent(m_socket, wtsclwq::READ);
 }
 
 auto Socket::CancelWrite() -> bool {
-    return IOManager::GetCurIOManager()->CancelEvent(m_socket, wtsclwq::WRITE);
+    return IOManager::GetThisThreadIOManager()->CancelEvent(m_socket, wtsclwq::WRITE);
 }
 
 auto Socket::CancelAccept() -> bool {
-    return IOManager::GetCurIOManager()->CancelEvent(m_socket, wtsclwq::READ);
+    return IOManager::GetThisThreadIOManager()->CancelEvent(m_socket, wtsclwq::READ);
 }
 
 auto Socket::CancelAll() -> bool {
-    return IOManager::GetCurIOManager()->CancelAll(m_socket);
+    return IOManager::GetThisThreadIOManager()->CancelAll(m_socket);
 }
 
 void Socket::InitSocket() {
